@@ -827,6 +827,9 @@ class MainWindow(QWidget):
             self.display.switch_isPlaying(False)
             
             url=re.findall(r'([^/\.\?]+)',self.urlEdit.text())
+            if not os.path.exists(os.getcwd()+'/scores/DP/'+folderDict[url[-4]]):
+                os.makedirs(os.getcwd()+'/scores/DP/'+folderDict[url[-4]])
+            
             fileName=folderDict[url[-4]]+'/'+url[-3]+'_'+re.findall(r'([A-Z1-9])',url[-1])[1]+'.txt'
             if os.path.exists('scores/DP/'+fileName):
                 self.analyze_text(os.getcwd()+'/scores/DP/'+fileName)
@@ -1039,6 +1042,8 @@ if __name__ == '__main__':
     import sys
     if not os.path.exists(os.getcwd()+'/scores'):
         os.makedirs(os.getcwd()+'/scores')
+    if not os.path.exists(os.getcwd()+'/scores/DP'):
+        os.makedirs(os.getcwd()+'/scores/DP')
     app = QApplication(sys.argv)
     mainWindow = MainWindow()
     pal = mainWindow.palette()
