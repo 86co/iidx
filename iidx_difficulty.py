@@ -62,7 +62,6 @@ def main():
 def handle_input():
     score=None
     while score is None:
-        #fileName = input("input fileName(.txt): /scores/SP/ ")
         print('')
         series = input("series: ")
         try: series=folderName[series]
@@ -229,8 +228,8 @@ def simulate_judge(lane1, status1, nwf_i, nwf1, notesList_with_frame, isCN, diff
             dd_one_tate =0
             if lane1==0 or lane2==0:
                 if   abs(lane2-lane1)==0:
-                    dd_both=48*pressability0(df/4)
-                    dd_one =48*pressability0(df/4)
+                    dd_both=40*pressability0(df/4)
+                    dd_one =40*pressability0(df/4)
                 elif abs(lane2-lane1)==1:
                     dd_both=40*pressability1(df/6)
                 elif abs(lane2-lane1)==2:
