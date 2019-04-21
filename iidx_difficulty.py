@@ -62,12 +62,14 @@ def main():
 def handle_input():
     score=None
     while score is None:
+        fileList=[]
         print('')
         series = input("series: ")
-        try: series=folderName[series]
+        try: 
+            series=folderName[series]
+            filePath = os.getcwd()+'/scores/SP/'+series
+            fileList = [fileName for fileName in os.listdir(filePath) if re.match(r'[\w]+.txt',fileName)]
         except: continue
-        filePath = os.getcwd()+'/scores/SP/'+series
-        fileList = os.listdir(filePath)
         for i, fileName in enumerate(fileList):
             print('{:>3}'.format(str(i+1))+". "+re.findall(r'[\w]+',fileName)[0])
         index = input("  ...: ")
