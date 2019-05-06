@@ -187,11 +187,11 @@ class Display(QGraphicsItem):
         painter.drawRect(285-28*self.is2P,0,1,536)
         
         displayMin=self.yPhase
-        displayMax=self.yPhase+320*(1-(self.sudden/1000))/self.hiSpeed
+        displayMax=self.yPhase+928/3*(1-(self.sudden/1000))/self.hiSpeed
         
         for y in self.score.barLine:
             if displayMin<=y<displayMax:
-                yn=539-(y-self.yPhase)*self.hiSpeed*27/16
+                yn=539-(y-self.yPhase)*self.hiSpeed*405/232
                 painter.drawRect(2,yn,323,1)
         
         painter.setBrush(QColor(255,0,0))
@@ -226,8 +226,8 @@ class Display(QGraphicsItem):
                     
             for y, duration in notesOnLane:
                 if displayMin-duration<=y<displayMax:
-                    yn=540-(y-self.yPhase+duration)*self.hiSpeed*27/16
-                    durationN=duration*self.hiSpeed*27/16
+                    yn=540-(y-self.yPhase+duration)*self.hiSpeed*405/232
+                    durationN=duration*self.hiSpeed*405/232
                     self.drawLongNote(painter, color, pos, yn, durationN)
                     
         
@@ -236,7 +236,7 @@ class Display(QGraphicsItem):
             
             for y, status in notesOnLane:
                 if displayMin<=y<displayMax:
-                    yn=532-(y-self.yPhase)*self.hiSpeed*27/16
+                    yn=532-(y-self.yPhase)*self.hiSpeed*405/232
                     self.drawNote(painter, color, status, pos, yn)
         
         painter.setBrush(QColor(63,63,63))
