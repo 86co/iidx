@@ -43,7 +43,7 @@ folderDict = {
 }
     
 class Display(QGraphicsItem):
-    def __init__(self, width=394, height=552):
+    def __init__(self, width=352, height=492):
         super(Display, self).__init__()
         self.width = width
         self.height = height
@@ -171,31 +171,31 @@ class Display(QGraphicsItem):
         painter.setBrush(QColor(63,63,63))
         painter.drawRect(0,0,self.width,self.height)
         painter.setBrush(QColor(0,0,0))
-        painter.drawRect(0,0,327,542)
+        painter.drawRect(0,0,288,480)
         painter.setBrush(QColor(23,23,23))
-        painter.drawRect(70-68*self.is2P,0,39,536)
-        painter.drawRect(142-68*self.is2P,0,39,536)
-        painter.drawRect(214-68*self.is2P,0,39,536)
-        painter.drawRect(286-68*self.is2P,0,39,536)
+        painter.drawRect(63-61*self.is2P,0,35,476)
+        painter.drawRect(127-61*self.is2P,0,35,476)
+        painter.drawRect(191-61*self.is2P,0,35,476)
+        painter.drawRect(255-61*self.is2P,0,35,476)
         painter.setBrush(QColor(127,127,127))
-        painter.drawRect(69-28*self.is2P,0,1,536)
-        painter.drawRect(109-36*self.is2P,0,1,536)
-        painter.drawRect(141-28*self.is2P,0,1,536)
-        painter.drawRect(181-36*self.is2P,0,1,536)
-        painter.drawRect(213-28*self.is2P,0,1,536)
-        painter.drawRect(253-36*self.is2P,0,1,536)
-        painter.drawRect(285-28*self.is2P,0,1,536)
+        painter.drawRect(62-25*self.is2P,0,1,476)
+        painter.drawRect(98-33*self.is2P,0,1,476)
+        painter.drawRect(126-25*self.is2P,0,1,476)
+        painter.drawRect(162-33*self.is2P,0,1,476)
+        painter.drawRect(190-25*self.is2P,0,1,476)
+        painter.drawRect(226-33*self.is2P,0,1,476)
+        painter.drawRect(254-25*self.is2P,0,1,476)
         
         displayMin=self.yPhase
         displayMax=self.yPhase+13984/45*(1-(self.sudden/1000))/self.hiSpeed
         
         for y in self.score.barLine:
             if displayMin<=y<displayMax:
-                yn=539-(y-self.yPhase)*self.hiSpeed*6075/3496
-                painter.drawRect(2,yn,323,1)
+                yn=479-(y-self.yPhase)*self.hiSpeed*675/437
+                painter.drawRect(2,yn,288,1)
         
         painter.setBrush(QColor(255,0,0))
-        painter.drawRect(2,536,323,4)
+        painter.drawRect(2,476,288,4)
         
         for lane, notesOnLane in enumerate(self.notes):
             color, pos = self.setColorPos(lane)
@@ -226,8 +226,8 @@ class Display(QGraphicsItem):
                     
             for y, duration in notesOnLane:
                 if displayMin-duration<=y<displayMax:
-                    yn=540-(y-self.yPhase+duration)*self.hiSpeed*6075/3496
-                    durationN=duration*self.hiSpeed*6075/3496
+                    yn=480-(y-self.yPhase+duration)*self.hiSpeed*675/437
+                    durationN=duration*self.hiSpeed*675/437
                     self.drawLongNote(painter, color, pos, yn, durationN)
                     
         
@@ -236,54 +236,54 @@ class Display(QGraphicsItem):
             
             for y, status in notesOnLane:
                 if displayMin<=y<displayMax:
-                    yn=532-(y-self.yPhase)*self.hiSpeed*6075/3496
+                    yn=472-(y-self.yPhase)*self.hiSpeed*675/437
                     self.drawNote(painter, color, status, pos, yn)
         
         painter.setBrush(QColor(63,63,63))
-        painter.drawRect(2,0,323,540*float(self.sudden)/1000-1)
+        painter.drawRect(2,0,288,480*float(self.sudden)/1000-1)
         painter.setBrush(QColor(127,127,127))
-        painter.drawRect(2,540*float(self.sudden)/1000-1,323,1)
+        painter.drawRect(2,480*float(self.sudden)/1000-1,288,1)
         
         painter.setBrush(QColor(255,255,255))
-        painter.drawRect(0,0,2,542)
-        painter.drawRect(325,0,2,542)
-        painter.drawRect(2,540,323,2)
+        painter.drawRect(0,0,2,482)
+        painter.drawRect(290,0,2,482)
+        painter.drawRect(2,480,288,2)
         
         painter.setBrush(QColor(63,63,63))
-        painter.drawRect(0,542,327,10)
+        painter.drawRect(0,482,292,10)
         painter.setBrush(QColor(0,0,0))
-        painter.drawRect(0,546,327,6)
+        painter.drawRect(0,486,292,6)
         
         painter.setBrush(QColor(191,95,0))
-        painter.drawRect(int(315*(512+self.yPhase)/(512+self.score.length)),546,12,6)
+        painter.drawRect(int(280*(512+self.yPhase)/(512+self.score.length)),486,12,6)
         painter.setBrush(QColor(223, 159, 0))
-        painter.drawRect(int(315*(512+self.yPhase)/(512+self.score.length))+1,547,10,4)
+        painter.drawRect(int(280*(512+self.yPhase)/(512+self.score.length))+1,487,10,4)
         painter.setBrush(QColor(255,223,127))
-        painter.drawRect(int(315*(512+self.yPhase)/(512+self.score.length))+4,547,4,4)
+        painter.drawRect(int(280*(512+self.yPhase)/(512+self.score.length))+4,487,4,4)
         
         font = painter.font()
-        font.setPixelSize(24)
+        font.setPixelSize(22)
         painter.setFont(font)
         painter.setPen(QColor(223,223,223))
-        painter.drawText(QRectF(327,512,67,24),Qt.AlignCenter,str(round(self.bpm*self.speed)))
-        font.setPixelSize(20)
-        painter.setFont(font)
-        painter.setPen(QColor(0,223,0))
-        painter.drawText(QRectF(327,62,67,20),Qt.AlignCenter,str(round(174800*(1000-self.sudden)/1000/self.bpm/self.hiSpeed/self.speed)) if self.bpm!=0 else "---")
-        painter.setPen(QColor(223,223,223))
-        painter.drawText(QRectF(327,34,67,20),Qt.AlignCenter,str(self.sudden))
+        painter.drawText(QRectF(292,454,60,22),Qt.AlignCenter,str(round(self.bpm*self.speed)))
         font.setPixelSize(18)
         painter.setFont(font)
-        painter.drawText(QRectF(327,124,67,18),Qt.AlignCenter,str('{:.2f}'.format(round(self.hiSpeed,2))))
-        painter.drawText(QRectF(327,450,67,18),Qt.AlignCenter,str('{:+.1f}'.format(round(self.speed*100-100,1))))
+        painter.setPen(QColor(0,223,0))
+        painter.drawText(QRectF(292,60,60,18),Qt.AlignCenter,str(round(174800*(1000-self.sudden)/1000/self.bpm/self.hiSpeed/self.speed)) if self.bpm!=0 else "---")
+        painter.setPen(QColor(223,223,223))
+        painter.drawText(QRectF(292,34,60,18),Qt.AlignCenter,str(self.sudden))
+        font.setPixelSize(16)
+        painter.setFont(font)
+        painter.drawText(QRectF(292,112,60,16),Qt.AlignCenter,str('{:.2f}'.format(round(self.hiSpeed,2))))
+        painter.drawText(QRectF(292,402,60,16),Qt.AlignCenter,str('{:+.1f}'.format(round(self.speed*100-100,1))))
         font.setPixelSize(12)
         painter.setFont(font)
-        painter.drawText(QRectF(327,492,67,12),Qt.AlignCenter,"BPM")
+        painter.drawText(QRectF(292,434,60,12),Qt.AlignCenter,"BPM")
         font.setPixelSize(10)
         painter.setFont(font)
-        painter.drawText(QRectF(327,16,67,10),Qt.AlignCenter,"SUDDEN+")
-        painter.drawText(QRectF(327,106,67,10),Qt.AlignCenter,"HI-SPEED")
-        painter.drawText(QRectF(327,432,67,10),Qt.AlignCenter,"SPEED")
+        painter.drawText(QRectF(292,16,60,10),Qt.AlignCenter,"SUDDEN+")
+        painter.drawText(QRectF(292,94,60,10),Qt.AlignCenter,"HI-SPEED")
+        painter.drawText(QRectF(292,384,60,10),Qt.AlignCenter,"SPEED")
         painter.setPen(Qt.NoPen)
         
     
@@ -292,60 +292,60 @@ class Display(QGraphicsItem):
         if lane==0:             color='s'
         elif lane in {1,3,5,7}: color='w'
         elif lane in {2,4,6}:   color='b'
-        pos=lane*36
+        pos=lane*32
         if self.is2P:
             if lane==0:
-                pos+=256
+                pos+=228
             else:
-                pos-=68
+                pos-=61
         return color, pos
     
     def drawKeybeam(self, painter, color, pos, t):
         if   color == 's':
             if   t>6:
-                lg = QLinearGradient(0, 540-(9-t)*120, 0, 540)
+                lg = QLinearGradient(0, 480-(9-t)*100, 0, 480)
                 lg.setColorAt(0.0, QColor(0, 255, 223, 0))
                 lg.setColorAt(1.0, QColor(0, 255, 223, 255))
                 painter.setBrush(lg)
-                painter.drawRect(2+pos, 540-(9-t)*120, 67, (9-t)*120)
+                painter.drawRect(2+pos, 480-(9-t)*100, 60, (9-t)*100)
             elif t>3:
-                lg = QLinearGradient(0, 180, 0, 540)
+                lg = QLinearGradient(0, 180, 0, 480)
                 lg.setColorAt(0.0, QColor(0, 255, 223, 0))
                 lg.setColorAt(1.0, QColor(0, 255, 223, 255))
                 painter.setBrush(lg)
-                painter.drawRect(2+pos, 180, 67, 360)
+                painter.drawRect(2+pos, 180, 60, 300)
             elif t>0:
-                lg = QLinearGradient(0, 180, 0, 540)
+                lg = QLinearGradient(0, 180, 0, 480)
                 lg.setColorAt(0.0, QColor(0, 255, 223, 0))
                 lg.setColorAt(1.0, QColor(0, 255, 223, t*64))
                 painter.setBrush(lg)
-                painter.drawRect(2+pos+(4-t)*9,180,67-(4-t)*18,360)
+                painter.drawRect(2+pos+(4-t)*8,180,60-(4-t)*16,300)
         elif color == 'w':
             if   t>3:
-                lg = QLinearGradient(0, 180, 0, 540)
+                lg = QLinearGradient(0, 180, 0, 480)
                 lg.setColorAt(0.0, QColor(63, 127, 255, 0))
                 lg.setColorAt(1.0, QColor(63, 127, 255, 255))
                 painter.setBrush(lg)
-                painter.drawRect(34+pos,180,39,360)
+                painter.drawRect(31+pos,180,35,300)
             elif t>0:
-                lg = QLinearGradient(0, 180, 0, 540)
+                lg = QLinearGradient(0, 180, 0, 480)
                 lg.setColorAt(0.0, QColor(63, 127, 255, 0))
                 lg.setColorAt(1.0, QColor(63, 127, 255, t*64))
                 painter.setBrush(lg)
-                painter.drawRect(34+pos+(4-t)*5,180,39-(4-t)*10,360)
+                painter.drawRect(31+pos+(4-t)*5,180,35-(4-t)*10,300)
         elif color == 'b':
             if   t>3:
-                lg = QLinearGradient(0, 180, 0, 540)
+                lg = QLinearGradient(0, 180, 0, 480)
                 lg.setColorAt(0.0, QColor(127, 223, 255, 0))
                 lg.setColorAt(1.0, QColor(127, 223, 255, 255))
                 painter.setBrush(lg)
-                painter.drawRect(38+pos,180,31,360)
+                painter.drawRect(35+pos,180,27,300)
             elif t>0:
-                lg = QLinearGradient(0, 180, 0, 540)
+                lg = QLinearGradient(0, 180, 0, 480)
                 lg.setColorAt(0.0, QColor(127, 223, 255, 0))
                 lg.setColorAt(1.0, QColor(127, 223, 255, t*64))
                 painter.setBrush(lg)
-                painter.drawRect(38+pos+(4-t)*4,180,31-(4-t)*8,360)
+                painter.drawRect(35+pos+(4-t)*4,180,27-(4-t)*8,300)
     
     def drawLongNote(self, painter, color, pos, yn, durationN):
         if color == 's':
@@ -364,27 +364,27 @@ class Display(QGraphicsItem):
                 color5=QColor(191, 191, 191)
                 color6=QColor(223, 223, 223)
             painter.setBrush(QColor(0, 0, 0))
-            painter.drawRect(2+pos,yn,67,durationN)
+            painter.drawRect(2+pos,yn,60,durationN)
             painter.setBrush(color1)
             painter.drawRect(5+pos,yn+8,4,durationN-24)
-            painter.drawRect(62+pos,yn+8,4,durationN-24)
-            painter.drawRect(22+pos,yn+8,27,durationN-24)
+            painter.drawRect(55+pos,yn+8,4,durationN-24)
+            painter.drawRect(21+pos,yn+8,24,durationN-24)
             painter.setBrush(color2)
-            painter.drawRect(32+pos,yn+8,7,durationN-24)
+            painter.drawRect(30+pos,yn+8,6,durationN-24)
             painter.setBrush(color3)
-            painter.drawRect(2+pos,yn+5,67,3)
-            painter.drawRect(2+pos,yn+durationN-16,67,3)
+            painter.drawRect(2+pos,yn+5,60,3)
+            painter.drawRect(2+pos,yn+durationN-16,60,3)
             painter.setBrush(color4)
-            painter.drawRect(49+pos,yn+5,14,3)
-            painter.drawRect(49+pos,yn+durationN-16,14,3)
+            painter.drawRect(45+pos,yn+5,12,3)
+            painter.drawRect(45+pos,yn+durationN-16,12,3)
             painter.setBrush(color5)
-            painter.drawRect(2+pos,yn+5,67,1)
-            painter.drawRect(2+pos,yn+durationN-16,67,1)
-            painter.drawRect(15+pos,yn+5,10,3)
-            painter.drawRect(15+pos,yn+durationN-16,10,3)
+            painter.drawRect(2+pos,yn+5,60,1)
+            painter.drawRect(2+pos,yn+durationN-16,60,1)
+            painter.drawRect(11+pos,yn+5,12,3)
+            painter.drawRect(11+pos,yn+durationN-16,12,3)
             painter.setBrush(color6)
-            painter.drawRect(19+pos,yn+5,2,3)
-            painter.drawRect(19+pos,yn+durationN-16,2,3)
+            painter.drawRect(16+pos,yn+5,2,3)
+            painter.drawRect(16+pos,yn+durationN-16,2,3)
         elif color == 'w':
             if not self.score.isHCN:
                 color1=QColor(127, 127, 127)
@@ -401,27 +401,27 @@ class Display(QGraphicsItem):
                 color5=QColor(191, 191, 191)
                 color6=QColor(223, 223, 223)
             painter.setBrush(QColor(0, 0, 0))
-            painter.drawRect(34+pos,yn,39,durationN)
+            painter.drawRect(31+pos,yn,35,durationN)
             painter.setBrush(color1)
-            painter.drawRect(36+pos,yn+8,2,durationN-24)
-            painter.drawRect(69+pos,yn+8,2,durationN-24)
-            painter.drawRect(49+pos,yn+8,9,durationN-24)
+            painter.drawRect(33+pos,yn+8,2,durationN-24)
+            painter.drawRect(62+pos,yn+8,2,durationN-24)
+            painter.drawRect(44+pos,yn+8,9,durationN-24)
             painter.setBrush(color2)
-            painter.drawRect(52+pos,yn+8,3,durationN-24)
+            painter.drawRect(47+pos,yn+8,3,durationN-24)
             painter.setBrush(color3)
-            painter.drawRect(34+pos,yn+5,39,3)
-            painter.drawRect(34+pos,yn+durationN-16,39,3)
+            painter.drawRect(31+pos,yn+5,35,3)
+            painter.drawRect(31+pos,yn+durationN-16,35,3)
             painter.setBrush(color4)
-            painter.drawRect(59+pos,yn+5,10,3)
-            painter.drawRect(59+pos,yn+durationN-16,10,3)
+            painter.drawRect(54+pos,yn+5,8,3)
+            painter.drawRect(54+pos,yn+durationN-16,8,3)
             painter.setBrush(color5)
-            painter.drawRect(34+pos,yn+5,39,1)
-            painter.drawRect(34+pos,yn+durationN-16,39,1)
-            painter.drawRect(40+pos,yn+5,10,3)
-            painter.drawRect(40+pos,yn+durationN-16,10,3)
+            painter.drawRect(31+pos,yn+5,35,1)
+            painter.drawRect(31+pos,yn+durationN-16,35,1)
+            painter.drawRect(37+pos,yn+5,8,3)
+            painter.drawRect(37+pos,yn+durationN-16,8,3)
             painter.setBrush(color6)
-            painter.drawRect(44+pos,yn+5,2,3)
-            painter.drawRect(44+pos,yn+durationN-16,2,3)
+            painter.drawRect(40+pos,yn+5,2,3)
+            painter.drawRect(40+pos,yn+durationN-16,2,3)
         elif color == 'b':
             if not self.score.isHCN:
                 color1=QColor(63, 63, 191)
@@ -438,27 +438,27 @@ class Display(QGraphicsItem):
                 color5=QColor(191, 191, 191)
                 color6=QColor(223, 223, 223)
             painter.setBrush(QColor(0, 0, 0))
-            painter.drawRect(38+pos,yn,31,durationN)
+            painter.drawRect(35+pos,yn,27,durationN)
             painter.setBrush(color1)
-            painter.drawRect(40+pos,yn+8,2,durationN-24)
-            painter.drawRect(65+pos,yn+8,2,durationN-24)
-            painter.drawRect(49+pos,yn+8,9,durationN-24)
+            painter.drawRect(37+pos,yn+8,2,durationN-24)
+            painter.drawRect(58+pos,yn+8,2,durationN-24)
+            painter.drawRect(44+pos,yn+8,9,durationN-24)
             painter.setBrush(color2)
-            painter.drawRect(52+pos,yn+8,3,durationN-24)
+            painter.drawRect(47+pos,yn+8,3,durationN-24)
             painter.setBrush(color3)
-            painter.drawRect(38+pos,yn+5,31,3)
-            painter.drawRect(38+pos,yn+durationN-16,31,3)
+            painter.drawRect(35+pos,yn+5,27,3)
+            painter.drawRect(35+pos,yn+durationN-16,27,3)
             painter.setBrush(color4)
-            painter.drawRect(57+pos,yn+5,10,3)
-            painter.drawRect(57+pos,yn+durationN-16,10,3)
+            painter.drawRect(52+pos,yn+5,8,3)
+            painter.drawRect(52+pos,yn+durationN-16,8,3)
             painter.setBrush(color5)
-            painter.drawRect(38+pos,yn+5,31,1)
-            painter.drawRect(38+pos,yn+durationN-16,31,1)
-            painter.drawRect(42+pos,yn+5,10,3)
-            painter.drawRect(42+pos,yn+durationN-16,10,3)
+            painter.drawRect(35+pos,yn+5,27,1)
+            painter.drawRect(35+pos,yn+durationN-16,27,1)
+            painter.drawRect(40+pos,yn+5,8,3)
+            painter.drawRect(40+pos,yn+durationN-16,8,3)
             painter.setBrush(color6)
-            painter.drawRect(46+pos,yn+5,2,3)
-            painter.drawRect(46+pos,yn+durationN-16,2,3)
+            painter.drawRect(43+pos,yn+5,2,3)
+            painter.drawRect(43+pos,yn+durationN-16,2,3)
     
     def drawNote(self, painter, color, status, pos, yn):
         if color == 's':
@@ -476,14 +476,14 @@ class Display(QGraphicsItem):
                     color2=QColor(191, 0, 255)
                     color3=QColor(255, 127, 255)
             painter.setBrush(color1)
-            painter.drawRect(2+pos,yn,67,8)
+            painter.drawRect(2+pos,yn,60,8)
             painter.setBrush(color2)
-            painter.drawRect(49+pos,yn,14,8)
+            painter.drawRect(45+pos,yn,12,8)
             painter.setBrush(color3)
-            painter.drawRect(2+pos,yn,67,1)
-            painter.drawRect(13+pos,yn,14,8)
+            painter.drawRect(2+pos,yn,60,1)
+            painter.drawRect(11+pos,yn,12,8)
             painter.setBrush(QColor(255, 255, 255))
-            painter.drawRect(19+pos,yn,2,8)
+            painter.drawRect(16+pos,yn,2,8)
         elif color == 'w':
             if status==0:
                 color1=QColor(191, 191, 191)
@@ -499,14 +499,14 @@ class Display(QGraphicsItem):
                     color2=QColor(255, 127, 64)
                     color3=QColor(255, 223, 191)
             painter.setBrush(color1)
-            painter.drawRect(34+pos,yn,39,8)
+            painter.drawRect(31+pos,yn,35,8)
             painter.setBrush(color2)
-            painter.drawRect(59+pos,yn,10,8)
+            painter.drawRect(54+pos,yn,8,8)
             painter.setBrush(color3)
-            painter.drawRect(34+pos,yn,39,1)
-            painter.drawRect(40+pos,yn,10,8)
+            painter.drawRect(31+pos,yn,35,1)
+            painter.drawRect(37+pos,yn,8,8)
             painter.setBrush(QColor(255, 255, 255))
-            painter.drawRect(44+pos,yn,2,8)
+            painter.drawRect(40+pos,yn,2,8)
         elif color == 'b':
             if status==0:
                 color1=QColor(0, 0, 255)
@@ -522,14 +522,14 @@ class Display(QGraphicsItem):
                     color2=QColor(159, 127, 223)
                     color3=QColor(223, 191, 255)
             painter.setBrush(color1)
-            painter.drawRect(38+pos,yn,31,8)
+            painter.drawRect(35+pos,yn,27,8)
             painter.setBrush(color2)
-            painter.drawRect(57+pos,yn,10,8)
+            painter.drawRect(52+pos,yn,8,8)
             painter.setBrush(color3)
-            painter.drawRect(38+pos,yn,31,1)
-            painter.drawRect(42+pos,yn,10,8)
+            painter.drawRect(35+pos,yn,27,1)
+            painter.drawRect(40+pos,yn,8,8)
             painter.setBrush(QColor(255, 255, 255))
-            painter.drawRect(46+pos,yn,2,8)
+            painter.drawRect(43+pos,yn,2,8)
     
     def boundingRect(self):
         return QRectF(0,0,self.width,self.height)
@@ -540,7 +540,7 @@ class MainWindow(QWidget):
         super(MainWindow, self).__init__(parent)
         self.graphicsView = QGraphicsView()
         scene = QGraphicsScene(self.graphicsView)
-        scene.setSceneRect(0, 0, 394, 552)
+        scene.setSceneRect(0, 0, 352, 492)
         self.graphicsView.setScene(scene)
         self.display = Display()
         scene.addItem(self.display)
@@ -584,13 +584,13 @@ class MainWindow(QWidget):
                 color:#3FAFFF;
             }
             QPushButton#fhs{
-                font:bold 14px;
+                font:bold 16px;
                 border-radius: 4px;
             }
             QSlider::groove:vertical#speedBar{
                 background-color:#2F2F2F;
                 width:6px;
-                height:270px;
+                height:240px;
             }
             QSlider::handle:vertical#speedBar{
                 background-color:#DFDFDF;
@@ -601,12 +601,12 @@ class MainWindow(QWidget):
             QSlider::groove:vertical#suddenBar{
                 background-color:#2F2F2F;
                 width:6px;
-                height:540px;
+                height:480px;
             }
             QSlider::groove:horizontal#seekBar{
                 background-color:#2F2F2F;
                 height:6px;
-                width:324px;
+                width:292px;
             }
             QPushButton#style{
                 font:bold 16px;
@@ -681,14 +681,14 @@ class MainWindow(QWidget):
         playBackLayout.setSpacing(24)
         playBackLayout.addSpacing(8)
         playBackLayout.addWidget(self.playBackButton)
-        playBackLayout.addSpacing(60)
+        playBackLayout.addSpacing(24)
         playBackLayout.addLayout(speedLayout)
         playBackLayout.addLayout(hiSpeedLayout)
         
         seekBarLayout = QHBoxLayout()
         seekBarLayout.setSpacing(0)
         seekBarLayout.addWidget(self.seekBar)
-        seekBarLayout.addSpacing(66)
+        seekBarLayout.addSpacing(60)
         
         playerLayout=QGridLayout()
         playerLayout.addLayout(suddenBarLayout,0,0)
@@ -708,8 +708,8 @@ class MainWindow(QWidget):
         analyzeLayout.setColumnStretch(2,1)
         
         songInfoLayout=QVBoxLayout()
-        songInfoLayout.setSpacing(32)
-        songInfoLayout.addSpacing(24)
+        songInfoLayout.setSpacing(24)
+        songInfoLayout.addSpacing(20)
         songInfoLayout.addWidget(self.genreLabel)
         songInfoLayout.addWidget(self.titleLabel)
         songInfoLayout.addWidget(self.artistLabel)
@@ -722,7 +722,7 @@ class MainWindow(QWidget):
         playerButtonLayout.addWidget(self.player2Button)
         playerButtonLayout.addStretch()
         styleLayout = QVBoxLayout()
-        styleLayout.setSpacing(8)
+        styleLayout.setSpacing(6)
         styleLayout.addLayout(playerButtonLayout)
         styleLayout.addWidget(self.normalButton)
         styleLayout.addWidget(self.randomButton)
@@ -735,7 +735,6 @@ class MainWindow(QWidget):
         propertyLayout.addLayout(analyzeLayout)
         propertyLayout.addLayout(songInfoLayout)
         propertyLayout.addSpacing(32)
-        
         propertyLayout.addLayout(styleLayout)
         propertyLayout.addStretch()
         
@@ -947,11 +946,11 @@ class MainWindow(QWidget):
             self.display.switch_isEnd(False)
             
     def set_genre(self):
-        return '<p><font size="4" color="#CFCFCF">'+self.display.score.genre+'</font></p>'
+        return '<p><font size="3" color="#CFCFCF">'+self.display.score.genre+'</font></p>'
     def set_title(self):
-        return '<p><font size="7" color="#CFCFCF">'+self.display.score.title+'</font></p>'
+        return '<p><font size="6" color="#CFCFCF">'+self.display.score.title+'</font></p>'
     def set_artist(self):
-        return '<p><font size="4" color="#CFCFCF">'+self.display.score.artist+'</font></p>'
+        return '<p><font size="3" color="#CFCFCF">'+self.display.score.artist+'</font></p>'
     def set_level(self):
         if self.display.score.level1=='ANOTHER':
             return '<p><font size="3" color="#CF3F3F">'+self.display.score.level+'</font></p>'
