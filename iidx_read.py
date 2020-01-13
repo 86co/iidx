@@ -37,6 +37,7 @@ folderDict = {
     "24":"24_SINOBUZ",
     "25":"25_CANNON_BALLERS",
     "26":"26_Rootage",
+    "27":"27_HEROIC_VERSE"
 }
 
 def main():
@@ -47,7 +48,11 @@ def main():
         
     score=Score()
     
-    ver_url_list = ["http://textage.cc/score/?vQ11B00"]
+    ver_url_list = [
+                   "http://textage.cc/score/index.html?vR11B00"
+                   ]
+    
+    failed_list = []
     for ver_url in ver_url_list:
         options = webdriver.chrome.options.Options()
         options.add_argument('--headless')
@@ -60,25 +65,31 @@ def main():
         url_list=[]
         songs = soup.center.find_all('table')[1].tbody.find_all('tr')[1:]
         for song in songs:
-            try:
-                url = song.find_all('td')[0].find_all('a')[0].get('href')
-                url_list.append("http://textage.cc/score/"+url)
-            except:
-                pass
+            for i in (0,1):
+                try:
+                    url = song.find_all('td')[i].find_all('a')[0].get('href')
+                    url_list.append("http://textage.cc/score/"+url+"=24")
+                except:
+                    pass
                 
         for url_ in url_list:
             try:
                 url=re.findall(r'([^/\.\?]+)', url_)
                 if not os.path.exists(os.getcwd()+'/scores/SP/'+folderDict[url[-4]]):
                     os.makedirs(os.getcwd()+'/scores/SP/'+folderDict[url[-4]])
-                    
-                fileName=folderDict[url[-4]]+'/'+url[-3]+'_'+re.findall(r'([A-Z1-9])',url[-1])[1]+'.txt'
+
+                difficulty = re.findall(r'([A-Z1-9])',url[-1])[1]
+                if difficulty=='X': difficulty='L'
+
+                fileName=folderDict[url[-4]]+'/'+url[-3]+'_'+difficulty+'.txt'
                 if not os.path.exists('scores/SP/'+fileName):
                     score.analyze_web(url_)
                     score.save_text(os.getcwd()+'/scores/SP/'+fileName)
                     print(fileName)
             except:
-                pass
+                failed_list.append(url_)
+        
+    print(failed_list)
 
 
 if __name__ == '__main__':
