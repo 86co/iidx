@@ -40,6 +40,7 @@ folderDict = {
     "24":"24_SINOBUZ",
     "25":"25_CANNON_BALLERS",
     "26":"26_Rootage",
+    "27":"27_HEROIC_VERSE"
 }
     
 class Display(QGraphicsItem):
@@ -54,7 +55,7 @@ class Display(QGraphicsItem):
         self.notes = [[] for _ in range(8)]
         self.longNotes = [[] for _ in range(8)]
         
-        self.yPhase=-512.0
+        self.yPhase=-768.0
         self.sudden=0
         self.hiSpeed=1.0
         self.speed=1.0
@@ -154,7 +155,7 @@ class Display(QGraphicsItem):
         if yPhase is not None:
             self.yPhase=yPhase
         elif self.isPlaying:
-            self.yPhase+=4.0/225*self.bpm*self.speed
+            self.yPhase+=2.0/75*self.bpm*self.speed
             if self.yPhase>=self.score.length: self.switch_isEnd(True)
         if self.score.bpm:
             self.bpm=self.score.bpm[0][1]
@@ -187,11 +188,11 @@ class Display(QGraphicsItem):
         painter.drawRect(254-25*self.is2P,0,1,476)
         
         displayMin=self.yPhase
-        displayMax=self.yPhase+13984/45*(1-(self.sudden/1000))/self.hiSpeed
+        displayMax=self.yPhase+6992/15*(1-(self.sudden/1000))/self.hiSpeed
         
         for y in self.score.barLine:
             if displayMin<=y<displayMax:
-                yn=479-(y-self.yPhase)*self.hiSpeed*675/437
+                yn=479-(y-self.yPhase)*self.hiSpeed*450/437
                 painter.drawRect(2,yn,288,1)
         
         painter.setBrush(QColor(255,0,0))
@@ -226,8 +227,8 @@ class Display(QGraphicsItem):
                     
             for y, duration in notesOnLane:
                 if displayMin-duration<=y<displayMax:
-                    yn=480-(y-self.yPhase+duration)*self.hiSpeed*675/437
-                    durationN=duration*self.hiSpeed*675/437
+                    yn=480-(y-self.yPhase+duration)*self.hiSpeed*450/437
+                    durationN=duration*self.hiSpeed*450/437
                     self.drawLongNote(painter, color, pos, yn, durationN)
                     
         
@@ -236,7 +237,7 @@ class Display(QGraphicsItem):
             
             for y, status in notesOnLane:
                 if displayMin<=y<displayMax:
-                    yn=472-(y-self.yPhase)*self.hiSpeed*675/437
+                    yn=472-(y-self.yPhase)*self.hiSpeed*450/437
                     self.drawNote(painter, color, status, pos, yn)
         
         painter.setBrush(QColor(63,63,63))
@@ -255,11 +256,11 @@ class Display(QGraphicsItem):
         painter.drawRect(0,486,292,6)
         
         painter.setBrush(QColor(191,95,0))
-        painter.drawRect(int(280*(512+self.yPhase)/(512+self.score.length)),486,12,6)
+        painter.drawRect(int(280*(768+self.yPhase)/(768+self.score.length)),486,12,6)
         painter.setBrush(QColor(223, 159, 0))
-        painter.drawRect(int(280*(512+self.yPhase)/(512+self.score.length))+1,487,10,4)
+        painter.drawRect(int(280*(768+self.yPhase)/(768+self.score.length))+1,487,10,4)
         painter.setBrush(QColor(255,223,127))
-        painter.drawRect(int(280*(512+self.yPhase)/(512+self.score.length))+4,487,4,4)
+        painter.drawRect(int(280*(768+self.yPhase)/(768+self.score.length))+4,487,4,4)
         
         font = painter.font()
         font.setPixelSize(22)
@@ -547,7 +548,7 @@ class MainWindow(QWidget):
         self.graphicsView.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         
         self.timer = QTimer(self)
-        self.timer.setInterval(1000.0/60)
+        self.timer.setInterval(16)
         self.timer.timeout.connect(self.update_yPhase)
         self.timer.start()
         
@@ -632,7 +633,7 @@ class MainWindow(QWidget):
         self.button('fileOpen',     'OPEN',     'file',         50,  20,    True,  False,   'fileOpen',     style)
         self.button('player1',      '1P',       'style',        40,  24,    True,  True,    'player1',      style)
         self.button('player2',      '2P',       'style',        40,  24,    True,  False,   'player2',      style)
-        self.button('normal',       'NORMAL',   'style',        180, 24,    True,  True,    'normal',       style)
+        self.button('off',          'OFF',      'style',        180, 24,    True,  True,    'off',          style)
         self.button('random',       'RANDOM',   'style',        180, 24,    True,  False,   'random',       style)
         self.button('rRandom',      'R-RANDOM', 'style',        180, 24,    True,  False,   'rRandom',      style)
         self.button('sRandom',      'S-RANDOM', 'style',        180, 24,    True,  False,   'sRandom',      style)
@@ -724,7 +725,7 @@ class MainWindow(QWidget):
         styleLayout = QVBoxLayout()
         styleLayout.setSpacing(6)
         styleLayout.addLayout(playerButtonLayout)
-        styleLayout.addWidget(self.normalButton)
+        styleLayout.addWidget(self.offButton)
         styleLayout.addWidget(self.randomButton)
         styleLayout.addWidget(self.rRandomButton)
         styleLayout.addWidget(self.sRandomButton)
@@ -834,10 +835,10 @@ class MainWindow(QWidget):
         self.display.update_yPhase(float(yPhase))
     
     def reset(self):
-        self.normal()
-        self.seekBar.setRange(-512,self.display.score.length)
-        self.seekBar.setValue(-512)
-        self.change_yPhase(-512)
+        self.off()
+        self.seekBar.setRange(-768,self.display.score.length)
+        self.seekBar.setValue(-768)
+        self.change_yPhase(-768)
         self.change_sudden(self.display.sudden)
         self.genreLabel.setText(self.set_genre())
         self.titleLabel.setText(self.set_title())
@@ -886,9 +887,9 @@ class MainWindow(QWidget):
         
         self.update_yPhase()
     
-    def normal(self):
+    def off(self):
         self.display.change_style(0)
-        self.normalButton.setChecked(True)
+        self.offButton.setChecked(True)
         self.randomButton.setChecked(False)
         self.rRandomButton.setChecked(False)
         self.sRandomButton.setChecked(False)
@@ -898,7 +899,7 @@ class MainWindow(QWidget):
         
     def random(self):
         self.display.change_style(1)
-        self.normalButton.setChecked(False)
+        self.offButton.setChecked(False)
         self.randomButton.setChecked(True)
         self.rRandomButton.setChecked(False)
         self.sRandomButton.setChecked(False)
@@ -908,7 +909,7 @@ class MainWindow(QWidget):
         
     def rRandom(self):
         self.display.change_style(2)
-        self.normalButton.setChecked(False)
+        self.offButton.setChecked(False)
         self.randomButton.setChecked(False)
         self.rRandomButton.setChecked(True)
         self.sRandomButton.setChecked(False)
@@ -918,7 +919,7 @@ class MainWindow(QWidget):
             
     def sRandom(self):
         self.display.change_style(3)
-        self.normalButton.setChecked(False)
+        self.offButton.setChecked(False)
         self.randomButton.setChecked(False)
         self.rRandomButton.setChecked(False)
         self.sRandomButton.setChecked(True)
@@ -928,7 +929,7 @@ class MainWindow(QWidget):
         
     def mirror(self):
         self.display.change_style(4)
-        self.normalButton.setChecked(False)
+        self.offButton.setChecked(False)
         self.randomButton.setChecked(False)
         self.rRandomButton.setChecked(False)
         self.sRandomButton.setChecked(False)
@@ -941,8 +942,8 @@ class MainWindow(QWidget):
         if self.display.isEnd:
             self.playBackButton.setChecked(False)
             self.display.switch_isPlaying(False)
-            self.seekBar.setValue(-512)
-            self.change_yPhase(-512)
+            self.seekBar.setValue(-768)
+            self.change_yPhase(-768)
             self.display.switch_isEnd(False)
             
     def set_genre(self):
@@ -952,7 +953,9 @@ class MainWindow(QWidget):
     def set_artist(self):
         return '<p><font size="3" color="#CFCFCF">'+self.display.score.artist+'</font></p>'
     def set_level(self):
-        if self.display.score.level1=='ANOTHER':
+        if self.display.score.level1=='LEGGENDARIA':
+            return '<p><font size="3" color="#CF3FCF">'+self.display.score.level+'</font></p>'
+        elif self.display.score.level1=='ANOTHER':
             return '<p><font size="3" color="#CF3F3F">'+self.display.score.level+'</font></p>'
         elif self.display.score.level1=='HYPER':
             return '<p><font size="3" color="#CF7F3F">'+self.display.score.level+'</font></p>'

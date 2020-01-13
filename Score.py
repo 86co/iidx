@@ -23,8 +23,6 @@ class Score():
         self.barLine = []
         self.bpm = []
         
-        self.yList = []
-        self.frameList = []
         self.number_of_notes=0
     
     def analyze_web(self,url):
@@ -53,19 +51,18 @@ class Score():
         yPhase=0.0
         for bar in bars:
             self.barLine.append(yPhase)
-            barLength=float(bar.get('height'))
+            barLength=int(bar.get('height'))
             notesOnBar=bar.tbody.tr.td.div.contents
             
             for note in notesOnBar:
                 self.set_note_web(note, yPhase, barLength)
                 
-            yPhase+=barLength*2
+            yPhase+=barLength
         
         self.sort_bpmList(bpm_tmp)
         self.sort_notes()
         self.combine_longNotes()
         self.calculate_length()
-        self.make_lists()
     
     def set_songInfo_web(self, songInfo):
         self.genre  = re.findall(r'([^\"]+)',songInfo.next_element)[0]
@@ -85,12 +82,12 @@ class Score():
                    '../ls.gif','../hs.gif','../lw.gif','../hw.gif','../lb.gif','../hb.gif'}:
             lane, isLongNote = self.toLane(note.get('src'),style[1])
             if isLongNote==True:
-                self.longNotes_default[lane].append([yPhase+(barLength-1-float(style[0])-float(style[2]))*2,float(style[2])*2])
+                self.longNotes_default[lane].append([yPhase+(barLength-1-int(style[0])-int(style[2])),int(style[2])])
             elif isLongNote==False:
-                self.notes_default[lane].append([yPhase+(barLength-5-float(style[0]))*2,0])
+                self.notes_default[lane].append([yPhase+(barLength-5-int(style[0])),0])
 
         elif src=='../t.gif':
-            self.bpm.append([yPhase+(barLength-2-float(style[0]))*2,float(note.next_sibling.string)])
+            self.bpm.append([yPhase+(barLength-2-int(style[0])),int(note.next_sibling.string)])
 
         if not self.isHCN and src in {'../hs.gif','../hw.gif','../hb.gif'}:
             self.isHCN=True
@@ -126,7 +123,6 @@ class Score():
         score=[]
         
         for line in lines:
-            line=re.sub(r'([\s]*//.*)','',line)
             commands=re.findall(r'(#[A-Z\d_]*)',line)
             if not commands: continue
             command=commands[0]
@@ -148,7 +144,7 @@ class Score():
         
         hold=[0,0,0,0,0,0,0,0]
         yPhase=0.0
-        barLength=256.0
+        barLength=384.0
         
         for line in score:
             command, option, line = self.handle_line(line)
@@ -156,13 +152,13 @@ class Score():
                 self.barLine.append(yPhase)
                 if option:
                     if option[0]=='$LENGTH':
-                        barLength=256.0*option[1]
+                        barLength=384.0*option[1]
             elif command=='#':
                 yPhase+=barLength
                 self.barLine.append(yPhase)
                 if option:
                     if option[0]=='$LENGTH':
-                        barLength=256.0*option[1]
+                        barLength=384.0*option[1]
             elif command=='#END':
                 yPhase+=barLength
             else:
@@ -171,7 +167,6 @@ class Score():
         self.sort_bpmList(bpm_tmp)
         self.make_longNotesList()
         self.calculate_length()
-        self.make_lists()
     
     def handle_line(self, line):
         command=re.findall(r'(#[A-Z\d_]*)',line)[0]
@@ -228,17 +223,13 @@ class Score():
     
     def save_text(self,filePath):
         text=[]
-        text.append("// 「//」…コメントアウト")
-        text.append("// 「#0」…コマンド")
-        text.append("// 「$0=0」…オプション")
-        text.append("")
         text.append("#SONGINFO")
-        text.append("   #GENRE  "+self.genre)
-        text.append("   #TITLE  "+self.title)
-        text.append("   #ARTIST "+self.artist)
-        text.append("   #LEVEL  "+self.level)
+        text.append("\t#GENRE  "+self.genre)
+        text.append("\t#TITLE  "+self.title)
+        text.append("\t#ARTIST "+self.artist)
+        text.append("\t#LEVEL  "+self.level)
         if len(self.bpm)==1:
-            text.append("   #BPM    "+str(int(self.bpm[0][1])))
+            text.append("\t#BPM    "+str(int(self.bpm[0][1])))
         else:
             maxBpm=self.bpm[0][1]
             minBpm=self.bpm[0][1]
@@ -247,15 +238,15 @@ class Score():
                     maxBpm=bpm[1]
                 if bpm[1]<minBpm:
                     minBpm=bpm[1]
-            text.append("   #BPM    "+str(int(minBpm))+'~'+str(int(maxBpm)))
+            text.append("\t#BPM    "+str(int(minBpm))+'~'+str(int(maxBpm)))
         if self.isHCN:
-            text.append("   #HCN    TRUE")
+            text.append("\t#HCN    TRUE")
         else:
-            text.append("   #HCN    FALSE")
+            text.append("\t#HCN    FALSE")
         text.append("#END")
         text.append("")
         bar=1
-        lengthOfBar=256
+        lengthOfBar=384
         barLine=self.barLine[:]
         barLine.append(barLine[-1]*2-barLine[-2])
         while(bar<len(barLine)):
@@ -268,9 +259,9 @@ class Score():
                     text.append(format(bar,'03')+" #")
             else:
                 if bar==1:
-                    text.append(format(bar,'03')+" #START $LENGTH="+str(float(lengthOfBar)/256))
+                    text.append(format(bar,'03')+" #START $LENGTH="+str(float(lengthOfBar)/384))
                 else:
-                    text.append(format(bar,'03')+" # $LENGTH="+str(float(lengthOfBar)/256))
+                    text.append(format(bar,'03')+" # $LENGTH="+str(float(lengthOfBar)/384))
             for index,lane in enumerate(self.notes_default):
                 notes=[]
                 for note in lane:
@@ -287,7 +278,7 @@ class Score():
                     for note in notes:
                         line[int(note[0]/gcd)]=str(note[1])
                     line="".join(line)
-                    text.append("   #"+str(index)+" "+line)
+                    text.append("\t#"+str(index)+" "+line)
             if len(self.bpm)>1:
                 bpms=[]
                 for bpm in self.bpm:
@@ -306,7 +297,7 @@ class Score():
                     line="".join(line)
                     for bpm in bpms:
                         line+=', '+str(int(bpm[1]))
-                    text.append("   #S "+line)
+                    text.append("\t#S "+line)
             bar+=1
         text.append("#END")
         
@@ -329,8 +320,6 @@ class Score():
         self.barLine = []
         self.bpm = []
         
-        self.yList = []
-        self.frameList = []
         self.number_of_notes=0
     
     def calculate_length(self):
@@ -340,7 +329,7 @@ class Score():
                 self.number_of_notes+=len(lane)
                 if lastNote<lane[-1][0]:
                     lastNote=lane[-1][0]
-        self.length=lastNote+512
+        self.length=lastNote+768
         
     def sort_bpmList(self,bpm_tmp):
         if not self.bpm:
@@ -375,34 +364,6 @@ class Score():
             for index, note in enumerate(lane):
                 if note[1]==1:
                     self.longNotes_default[laneIndex].append([note[0],lane[index+1][0]-note[0]])
-                    
-    def make_lists(self):
-        for lane in self.notes_default:
-            for note in lane:
-                self.yList.append(note[0])
-        self.yList=list(set(self.yList))
-        self.yList.sort()
-
-        frame=0
-        yPhase=0
-        count=0
-        bpm=self.bpm[0][1]
-
-        while count<len(self.yList):
-            count_before=count
-            count=0
-            for y in self.yList:
-                if y<=yPhase: count+=1
-            for _ in range(count-count_before): self.frameList.append(frame)
-            frame+=1
-            yPhase+=4.0/225*bpm
-
-            bpm=self.bpm[0][1]
-            for bpm_ in self.bpm:
-                if bpm_[0]<=yPhase:
-                    bpm=bpm_[1]
-                else:
-                    break
                 
     def change_style(self,style):
         notes=[[] for _ in range(8)]
@@ -431,51 +392,61 @@ class Score():
                 longNotes[d+1]=self.longNotes_default[r]
             arrangement=index
         elif style==3:
-            DF_MIN = 3.0
+            DF_MIN = 4
             
             notes_sRandom=[[] for _ in range(7)]
             longNotes_sRandom=[[] for _ in range(7)]
-            noted=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            hold=[0, 0, 0, 0, 0, 0, 0]
+            notes_default=[None for _ in range(7)]
+            for i, lane in enumerate(self.notes_default[1:]):
+                notes_default[i] = lane[:]
             
-            yList=[]
-            for lane in self.notes_default[1:]:
-                for note in lane:
-                    yList.append(note[0])
-            yList=list(set(yList))
-            yList.sort()
+            noted=[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
             
-            for yi in range(len(yList)):
-                bpm_cur=self.bpm[0][1]
-                for bpm in self.bpm:
-                    if bpm[0]<=yList[yi-1]:
-                        bpm_cur=bpm[1]
+            frame=0
+            yPhase=0
+            try:
+                bpm=self.bpm[0][1]
+            except:
+                pass
+            
+            while any(notes_default):
+                for i_lane, lane in enumerate(notes_default):
+                    count = 0
+                    for note in lane:
+                        if note[0]<=yPhase: count+=1
+                        else: break
+                    for _ in range(count):
+                        note = lane.pop(0)
+                        if note[1] in {0,1}:
+                            unnoted=[i for i, x in enumerate(noted) if x == [0,0]]
+                            r=random.choice(unnoted)
+                            notes_sRandom[r].append(note)
+                            if note[1]==0:
+                                noted[r][1]=DF_MIN
+                            elif note[1]==1:
+                                notes_sRandom[r].append(lane[0])
+                                longNotes_sRandom[r].append([note[0],lane[0][0]-note[0]])
+                                noted[r]=[1,i_lane]
+                        elif note[1] == 2:
+                            for i in range(7):
+                                if noted[i]==[1,i_lane]:
+                                    noted[i]=[0,DF_MIN]
+                for i in range(7):
+                    if noted[i][0]==0 and noted[i][1]>0:
+                        noted[i][1]-=1
+                    
+                frame+=1
+                yPhase+=2.0/75*bpm
+                
+                try:
+                    bpm=self.bpm[0][1]
+                except:
+                    pass
+                for bpm_ in self.bpm:
+                    if bpm_[0]<=yPhase:
+                        bpm=bpm_[1]
                     else:
                         break
-                if yi>0:
-                    df = 225/4*(yList[yi]-yList[yi-1])/bpm_cur
-                    for i in range(7):
-                        if hold[i]==0:
-                            if noted[i]>=df: noted[i]-=df
-                            else: noted[i]=0.0
-                
-                for lane in self.notes_default[1:]:
-                    for index, note in enumerate(lane):
-                        if note[0]==yList[yi]:
-                            if note[1] in {0,1}:
-                                unnoted=[i for i, x in enumerate(noted) if x == 0.0]
-                                r=random.choice(unnoted)
-                                notes_sRandom[r].append(note)
-                                if note[1]==0:
-                                    noted[r]=DF_MIN
-                                elif note[1]==1:
-                                    notes_sRandom[r].append(lane[index+1])
-                                    longNotes_sRandom[r].append([lane[index][0],lane[index+1][0]-lane[index][0]])
-                                    noted[r]=DF_MIN
-                                    hold[r]=lane[index+1][0]
-                            elif note[1] == 2:
-                                for i in range(7):
-                                    if hold[i]==note[0]: hold[i]=0
                 
             notes[1:8]=notes_sRandom[0:7]
             longNotes[1:8]=longNotes_sRandom[0:7]
