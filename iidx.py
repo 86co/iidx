@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
-from Score import Score
-
 from PyQt5.QtCore import (QLineF, QPointF, QRectF, Qt, QTimer, QThread, QUrl)
 from PyQt5.QtGui import (QBrush, QColor, QPainter, QLinearGradient, QIntValidator)
 from PyQt5.QtWidgets import (QApplication, QWidget, QGraphicsView, QGraphicsScene, QGraphicsItem, 
@@ -11,6 +9,8 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QGraphicsView, QGraphicsScen
 
 import os
 import re
+
+from Display import Display
 
 folderDict = {
     "1":"01_1st_style",
@@ -42,506 +42,13 @@ folderDict = {
     "26":"26_Rootage",
     "27":"27_HEROIC_VERSE"
 }
-    
-class Display(QGraphicsItem):
-    def __init__(self, width=352, height=492):
-        super(Display, self).__init__()
-        self.width = width
-        self.height = height
-        
-        self.score=Score()
-        
-        self.keybeam = [[0, 0, 0] for _ in range(8)]
-        self.notes = [[] for _ in range(8)]
-        self.longNotes = [[] for _ in range(8)]
-        
-        self.yPhase=-768.0
-        self.sudden=0
-        self.hiSpeed=1.0
-        self.speed=1.0
-        self.fhs=False
-        self.green=None
-        
-        self.isEnd=False
-        self.bpm=0.0
-        self.is2P=False
-        
-        self.isPlaying=False
-    
-    def switch_isPlaying(self, isPlaying):
-        self.isPlaying = isPlaying
-    
-    def change_style(self,style):
-        self.notes, self.longNotes, arrangement = self.score.change_style(style)
-        self.update_yPhase(None)
-        
-    def switch_player(self,is2P):
-        self.is2P = is2P
-        self.update_yPhase(None)
-    
-    def change_sudden(self,sudden):
-        if self.fhs and self.bpm!=0:
-            self.hiSpeed=(1000-sudden)/self.green/self.bpm/self.speed
-            if self.hiSpeed<0.50:
-                self.hiSpeed=0.50
-            elif self.hiSpeed>10.00:
-                self.hiSpeed=10.00
-        self.sudden=sudden
-        self.update_yPhase(None)
-            
-    def change_hiSpeed(self, isMinus):
-        if self.fhs:
-            if isMinus:
-                self.hiSpeed-=0.50
-                if self.hiSpeed<0.50:
-                    self.hiSpeed=0.50
-            else:
-                self.hiSpeed+=0.50
-                if self.hiSpeed>10.00:
-                    self.hiSpeed=10.00
-        else:
-            if isMinus:
-                if self.hiSpeed>2.00:
-                    self.hiSpeed-=0.25
-                elif self.hiSpeed>1.00:
-                    self.hiSpeed-=0.50
-            else:
-                if self.hiSpeed<2.00:
-                    self.hiSpeed+=0.50
-                elif self.hiSpeed<4.00:
-                    self.hiSpeed+=0.25
-        self.update_yPhase(None)
-            
-    def change_speed(self,speed):
-        self.speed=speed
-        self.update_yPhase(None)
-    
-    def switch_fhs(self,isChecked):
-        if isChecked:
-            self.fhs=True
-            if self.bpm!=0:
-                self.green=(1000-self.sudden)/self.hiSpeed/self.bpm
-        else:
-            self.fhs=False
-            if self.hiSpeed>=3.875:
-                self.hiSpeed=4.00
-            elif 3.625<=self.hiSpeed<3.875:
-                self.hiSpeed=3.75
-            elif 3.375<=self.hiSpeed<3.625:
-                self.hiSpeed=3.50
-            elif 3.125<=self.hiSpeed<3.375:
-                self.hiSpeed=3.25
-            elif 2.875<=self.hiSpeed<3.125:
-                self.hiSpeed=3.00
-            elif 2.625<=self.hiSpeed<2.875:
-                self.hiSpeed=2.75
-            elif 2.375<=self.hiSpeed<2.625:
-                self.hiSpeed=2.50
-            elif 2.125<=self.hiSpeed<2.375:
-                self.hiSpeed=2.25
-            elif 1.75<=self.hiSpeed<2.125:
-                self.hiSpeed=2.00
-            elif 1.25<=self.hiSpeed<1.75:
-                self.hiSpeed=1.50
-            elif self.hiSpeed<1.25:
-                self.hiSpeed=1.00
-            
-        self.update_yPhase(None)
-    
-    def switch_isEnd(self,isEnd):
-        self.isEnd=isEnd
-    
-    def update_yPhase(self, yPhase):
-        if yPhase is not None:
-            self.yPhase=yPhase
-        elif self.isPlaying:
-            self.yPhase+=2.0/75*self.bpm*self.speed
-            if self.yPhase>=self.score.length: self.switch_isEnd(True)
-        if self.score.bpm:
-            self.bpm=self.score.bpm[0][1]
-            for bpm in self.score.bpm:
-                if bpm[0]<=self.yPhase:
-                    self.bpm=bpm[1]
-                else:
-                    break
-        
-        self.update()
-    
-    def paint(self, painter, option, widget):
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(63,63,63))
-        painter.drawRect(0,0,self.width,self.height)
-        painter.setBrush(QColor(0,0,0))
-        painter.drawRect(0,0,288,480)
-        painter.setBrush(QColor(23,23,23))
-        painter.drawRect(63-61*self.is2P,0,35,476)
-        painter.drawRect(127-61*self.is2P,0,35,476)
-        painter.drawRect(191-61*self.is2P,0,35,476)
-        painter.drawRect(255-61*self.is2P,0,35,476)
-        painter.setBrush(QColor(127,127,127))
-        painter.drawRect(62-25*self.is2P,0,1,476)
-        painter.drawRect(98-33*self.is2P,0,1,476)
-        painter.drawRect(126-25*self.is2P,0,1,476)
-        painter.drawRect(162-33*self.is2P,0,1,476)
-        painter.drawRect(190-25*self.is2P,0,1,476)
-        painter.drawRect(226-33*self.is2P,0,1,476)
-        painter.drawRect(254-25*self.is2P,0,1,476)
-        
-        displayMin=self.yPhase
-        displayMax=self.yPhase+6992/15*(1-(self.sudden/1000))/self.hiSpeed
-        
-        for y in self.score.barLine:
-            if displayMin<=y<displayMax:
-                yn=479-(y-self.yPhase)*self.hiSpeed*450/437
-                painter.drawRect(2,yn,288,1)
-        
-        painter.setBrush(QColor(255,0,0))
-        painter.drawRect(2,476,288,4)
-        
-        for lane, notesOnLane in enumerate(self.notes):
-            color, pos = self.setColorPos(lane)
-            
-            if self.keybeam[lane][0]>0: self.keybeam[lane][0]-=1
-            
-            keybeam_ = self.keybeam[lane][1]
-            self.keybeam[lane][1] = sum(y<=displayMin for y, status in notesOnLane)
-            n = self.keybeam[lane][1] - keybeam_
-            keybeam_ = self.keybeam[lane][2]
-            self.keybeam[lane][2] = sum(y<=displayMin and status==2 for y, status in notesOnLane)
-            cne = self.keybeam[lane][2] - keybeam_
-            
-            cn = sum(y<=displayMin and status==1 for y, status in notesOnLane) - self.keybeam[lane][2]
-            if n>0 and self.isPlaying:
-                if lane==0: self.keybeam[lane][0]=8
-                else:       self.keybeam[lane][0]=6
-            if lane!=0:
-                if cn==1 and self.keybeam[lane][0]<4:
-                    self.keybeam[lane][0]=4
-                elif self.keybeam[lane][0]==4 and cne>0:
-                    self.keybeam[lane][0]=3
-                    
-            self.drawKeybeam(painter, color, pos, self.keybeam[lane][0])
-        
-        for lane, notesOnLane in enumerate(self.longNotes):
-            color, pos = self.setColorPos(lane)
-                    
-            for y, duration in notesOnLane:
-                if displayMin-duration<=y<displayMax:
-                    yn=480-(y-self.yPhase+duration)*self.hiSpeed*450/437
-                    durationN=duration*self.hiSpeed*450/437
-                    self.drawLongNote(painter, color, pos, yn, durationN)
-                    
-        
-        for lane, notesOnLane in enumerate(self.notes):
-            color, pos = self.setColorPos(lane)
-            
-            for y, status in notesOnLane:
-                if displayMin<=y<displayMax:
-                    yn=472-(y-self.yPhase)*self.hiSpeed*450/437
-                    self.drawNote(painter, color, status, pos, yn)
-        
-        painter.setBrush(QColor(63,63,63))
-        painter.drawRect(2,0,288,480*float(self.sudden)/1000-1)
-        painter.setBrush(QColor(127,127,127))
-        painter.drawRect(2,480*float(self.sudden)/1000-1,288,1)
-        
-        painter.setBrush(QColor(255,255,255))
-        painter.drawRect(0,0,2,482)
-        painter.drawRect(290,0,2,482)
-        painter.drawRect(2,480,288,2)
-        
-        painter.setBrush(QColor(63,63,63))
-        painter.drawRect(0,482,292,10)
-        painter.setBrush(QColor(0,0,0))
-        painter.drawRect(0,486,292,6)
-        
-        painter.setBrush(QColor(191,95,0))
-        painter.drawRect(int(280*(768+self.yPhase)/(768+self.score.length)),486,12,6)
-        painter.setBrush(QColor(223, 159, 0))
-        painter.drawRect(int(280*(768+self.yPhase)/(768+self.score.length))+1,487,10,4)
-        painter.setBrush(QColor(255,223,127))
-        painter.drawRect(int(280*(768+self.yPhase)/(768+self.score.length))+4,487,4,4)
-        
-        font = painter.font()
-        font.setPixelSize(22)
-        painter.setFont(font)
-        painter.setPen(QColor(223,223,223))
-        painter.drawText(QRectF(292,454,60,22),Qt.AlignCenter,str(round(self.bpm*self.speed)))
-        font.setPixelSize(18)
-        painter.setFont(font)
-        painter.setPen(QColor(0,223,0))
-        painter.drawText(QRectF(292,60,60,18),Qt.AlignCenter,str(round(174800*(1000-self.sudden)/1000/self.bpm/self.hiSpeed/self.speed)) if self.bpm!=0 else "---")
-        painter.setPen(QColor(223,223,223))
-        painter.drawText(QRectF(292,34,60,18),Qt.AlignCenter,str(self.sudden))
-        font.setPixelSize(16)
-        painter.setFont(font)
-        painter.drawText(QRectF(292,112,60,16),Qt.AlignCenter,str('{:.2f}'.format(round(self.hiSpeed,2))))
-        painter.drawText(QRectF(292,402,60,16),Qt.AlignCenter,str('{:+.1f}'.format(round(self.speed*100-100,1))))
-        font.setPixelSize(12)
-        painter.setFont(font)
-        painter.drawText(QRectF(292,434,60,12),Qt.AlignCenter,"BPM")
-        font.setPixelSize(10)
-        painter.setFont(font)
-        painter.drawText(QRectF(292,16,60,10),Qt.AlignCenter,"SUDDEN+")
-        painter.drawText(QRectF(292,94,60,10),Qt.AlignCenter,"HI-SPEED")
-        painter.drawText(QRectF(292,384,60,10),Qt.AlignCenter,"SPEED")
-        painter.setPen(Qt.NoPen)
-        
-    
-    def setColorPos(self, lane):
-        color=None
-        if lane==0:             color='s'
-        elif lane in {1,3,5,7}: color='w'
-        elif lane in {2,4,6}:   color='b'
-        pos=lane*32
-        if self.is2P:
-            if lane==0:
-                pos+=228
-            else:
-                pos-=61
-        return color, pos
-    
-    def drawKeybeam(self, painter, color, pos, t):
-        if   color == 's':
-            if   t>6:
-                lg = QLinearGradient(0, 480-(9-t)*100, 0, 480)
-                lg.setColorAt(0.0, QColor(0, 255, 223, 0))
-                lg.setColorAt(1.0, QColor(0, 255, 223, 255))
-                painter.setBrush(lg)
-                painter.drawRect(2+pos, 480-(9-t)*100, 60, (9-t)*100)
-            elif t>3:
-                lg = QLinearGradient(0, 180, 0, 480)
-                lg.setColorAt(0.0, QColor(0, 255, 223, 0))
-                lg.setColorAt(1.0, QColor(0, 255, 223, 255))
-                painter.setBrush(lg)
-                painter.drawRect(2+pos, 180, 60, 300)
-            elif t>0:
-                lg = QLinearGradient(0, 180, 0, 480)
-                lg.setColorAt(0.0, QColor(0, 255, 223, 0))
-                lg.setColorAt(1.0, QColor(0, 255, 223, t*64))
-                painter.setBrush(lg)
-                painter.drawRect(2+pos+(4-t)*8,180,60-(4-t)*16,300)
-        elif color == 'w':
-            if   t>3:
-                lg = QLinearGradient(0, 180, 0, 480)
-                lg.setColorAt(0.0, QColor(63, 127, 255, 0))
-                lg.setColorAt(1.0, QColor(63, 127, 255, 255))
-                painter.setBrush(lg)
-                painter.drawRect(31+pos,180,35,300)
-            elif t>0:
-                lg = QLinearGradient(0, 180, 0, 480)
-                lg.setColorAt(0.0, QColor(63, 127, 255, 0))
-                lg.setColorAt(1.0, QColor(63, 127, 255, t*64))
-                painter.setBrush(lg)
-                painter.drawRect(31+pos+(4-t)*5,180,35-(4-t)*10,300)
-        elif color == 'b':
-            if   t>3:
-                lg = QLinearGradient(0, 180, 0, 480)
-                lg.setColorAt(0.0, QColor(127, 223, 255, 0))
-                lg.setColorAt(1.0, QColor(127, 223, 255, 255))
-                painter.setBrush(lg)
-                painter.drawRect(35+pos,180,27,300)
-            elif t>0:
-                lg = QLinearGradient(0, 180, 0, 480)
-                lg.setColorAt(0.0, QColor(127, 223, 255, 0))
-                lg.setColorAt(1.0, QColor(127, 223, 255, t*64))
-                painter.setBrush(lg)
-                painter.drawRect(35+pos+(4-t)*4,180,27-(4-t)*8,300)
-    
-    def drawLongNote(self, painter, color, pos, yn, durationN):
-        if color == 's':
-            if not self.score.isHCN:
-                color1=QColor(127, 127, 127)
-                color2=QColor(191, 191, 191)
-                color3=QColor(191, 191, 191)
-                color4=QColor(127, 127, 127)
-                color5=QColor(223, 223, 223)
-                color6=QColor(255, 255, 255)
-            else:
-                color1=QColor(63, 31, 95)
-                color2=QColor(127, 95, 159)
-                color3=QColor(127, 127, 127)
-                color4=QColor(63, 63, 63)
-                color5=QColor(191, 191, 191)
-                color6=QColor(223, 223, 223)
-            painter.setBrush(QColor(0, 0, 0))
-            painter.drawRect(2+pos,yn,60,durationN)
-            painter.setBrush(color1)
-            painter.drawRect(5+pos,yn+8,4,durationN-24)
-            painter.drawRect(55+pos,yn+8,4,durationN-24)
-            painter.drawRect(20+pos,yn+8,24,durationN-24)
-            painter.setBrush(color2)
-            painter.drawRect(29+pos,yn+8,6,durationN-24)
-            painter.setBrush(color3)
-            painter.drawRect(2+pos,yn+5,60,3)
-            painter.drawRect(2+pos,yn+durationN-16,60,3)
-            painter.setBrush(color4)
-            painter.drawRect(45+pos,yn+5,12,3)
-            painter.drawRect(45+pos,yn+durationN-16,12,3)
-            painter.setBrush(color5)
-            painter.drawRect(2+pos,yn+5,60,1)
-            painter.drawRect(2+pos,yn+durationN-16,60,1)
-            painter.drawRect(11+pos,yn+5,12,3)
-            painter.drawRect(11+pos,yn+durationN-16,12,3)
-            painter.setBrush(color6)
-            painter.drawRect(16+pos,yn+5,2,3)
-            painter.drawRect(16+pos,yn+durationN-16,2,3)
-        elif color == 'w':
-            if not self.score.isHCN:
-                color1=QColor(127, 127, 127)
-                color2=QColor(191, 191, 191)
-                color3=QColor(191, 191, 191)
-                color4=QColor(127, 127, 127)
-                color5=QColor(223, 223, 223)
-                color6=QColor(255, 255, 255)
-            else:
-                color1=QColor(127, 95, 63)
-                color2=QColor(255, 223, 191)
-                color3=QColor(127, 127, 127)
-                color4=QColor(63, 63, 63)
-                color5=QColor(191, 191, 191)
-                color6=QColor(223, 223, 223)
-            painter.setBrush(QColor(0, 0, 0))
-            painter.drawRect(31+pos,yn,35,durationN)
-            painter.setBrush(color1)
-            painter.drawRect(33+pos,yn+8,2,durationN-24)
-            painter.drawRect(62+pos,yn+8,2,durationN-24)
-            painter.drawRect(44+pos,yn+8,9,durationN-24)
-            painter.setBrush(color2)
-            painter.drawRect(47+pos,yn+8,3,durationN-24)
-            painter.setBrush(color3)
-            painter.drawRect(31+pos,yn+5,35,3)
-            painter.drawRect(31+pos,yn+durationN-16,35,3)
-            painter.setBrush(color4)
-            painter.drawRect(54+pos,yn+5,8,3)
-            painter.drawRect(54+pos,yn+durationN-16,8,3)
-            painter.setBrush(color5)
-            painter.drawRect(31+pos,yn+5,35,1)
-            painter.drawRect(31+pos,yn+durationN-16,35,1)
-            painter.drawRect(37+pos,yn+5,8,3)
-            painter.drawRect(37+pos,yn+durationN-16,8,3)
-            painter.setBrush(color6)
-            painter.drawRect(40+pos,yn+5,2,3)
-            painter.drawRect(40+pos,yn+durationN-16,2,3)
-        elif color == 'b':
-            if not self.score.isHCN:
-                color1=QColor(63, 63, 191)
-                color2=QColor(127, 127, 223)
-                color3=QColor(0, 63, 191)
-                color4=QColor(0, 0, 127)
-                color5=QColor(63, 127, 223)
-                color6=QColor(127, 191, 255)
-            else:
-                color1=QColor(95, 63, 127)
-                color2=QColor(223, 191, 255)
-                color3=QColor(127, 127, 127)
-                color4=QColor(63, 63, 63)
-                color5=QColor(191, 191, 191)
-                color6=QColor(223, 223, 223)
-            painter.setBrush(QColor(0, 0, 0))
-            painter.drawRect(35+pos,yn,27,durationN)
-            painter.setBrush(color1)
-            painter.drawRect(37+pos,yn+8,2,durationN-24)
-            painter.drawRect(58+pos,yn+8,2,durationN-24)
-            painter.drawRect(44+pos,yn+8,9,durationN-24)
-            painter.setBrush(color2)
-            painter.drawRect(47+pos,yn+8,3,durationN-24)
-            painter.setBrush(color3)
-            painter.drawRect(35+pos,yn+5,27,3)
-            painter.drawRect(35+pos,yn+durationN-16,27,3)
-            painter.setBrush(color4)
-            painter.drawRect(52+pos,yn+5,8,3)
-            painter.drawRect(52+pos,yn+durationN-16,8,3)
-            painter.setBrush(color5)
-            painter.drawRect(35+pos,yn+5,27,1)
-            painter.drawRect(35+pos,yn+durationN-16,27,1)
-            painter.drawRect(40+pos,yn+5,8,3)
-            painter.drawRect(40+pos,yn+durationN-16,8,3)
-            painter.setBrush(color6)
-            painter.drawRect(43+pos,yn+5,2,3)
-            painter.drawRect(43+pos,yn+durationN-16,2,3)
-    
-    def drawNote(self, painter, color, status, pos, yn):
-        if color == 's':
-            if status==0:
-                color1=QColor(255, 0, 0)
-                color2=QColor(223, 0, 0)
-                color3=QColor(255, 127, 127)
-            else:
-                if not self.score.isHCN:
-                    color1=QColor(255, 191, 0)
-                    color2=QColor(255, 127, 0)
-                    color3=QColor(255, 223, 0)
-                else:
-                    color1=QColor(223, 0, 255)
-                    color2=QColor(191, 0, 255)
-                    color3=QColor(255, 127, 255)
-            painter.setBrush(color1)
-            painter.drawRect(2+pos,yn,60,8)
-            painter.setBrush(color2)
-            painter.drawRect(45+pos,yn,12,8)
-            painter.setBrush(color3)
-            painter.drawRect(2+pos,yn,60,1)
-            painter.drawRect(11+pos,yn,12,8)
-            painter.setBrush(QColor(255, 255, 255))
-            painter.drawRect(16+pos,yn,2,8)
-        elif color == 'w':
-            if status==0:
-                color1=QColor(191, 191, 191)
-                color2=QColor(127, 127, 127)
-                color3=QColor(223, 223, 223)
-            else:
-                if not self.score.isHCN:
-                    color1=QColor(191, 191, 127)
-                    color2=QColor(127, 127, 63)
-                    color3=QColor(223, 223, 191)
-                else:
-                    color1=QColor(255, 191, 127)
-                    color2=QColor(255, 127, 64)
-                    color3=QColor(255, 223, 191)
-            painter.setBrush(color1)
-            painter.drawRect(31+pos,yn,35,8)
-            painter.setBrush(color2)
-            painter.drawRect(54+pos,yn,8,8)
-            painter.setBrush(color3)
-            painter.drawRect(31+pos,yn,35,1)
-            painter.drawRect(37+pos,yn,8,8)
-            painter.setBrush(QColor(255, 255, 255))
-            painter.drawRect(40+pos,yn,2,8)
-        elif color == 'b':
-            if status==0:
-                color1=QColor(0, 0, 255)
-                color2=QColor(0, 0, 191)
-                color3=QColor(127, 127, 255)
-            else:
-                if not self.score.isHCN:
-                    color1=QColor(63, 191, 255)
-                    color2=QColor(0, 127, 255)
-                    color3=QColor(127, 223, 255)
-                else:
-                    color1=QColor(191, 159, 255)
-                    color2=QColor(159, 127, 223)
-                    color3=QColor(223, 191, 255)
-            painter.setBrush(color1)
-            painter.drawRect(35+pos,yn,27,8)
-            painter.setBrush(color2)
-            painter.drawRect(52+pos,yn,8,8)
-            painter.setBrush(color3)
-            painter.drawRect(35+pos,yn,27,1)
-            painter.drawRect(40+pos,yn,8,8)
-            painter.setBrush(QColor(255, 255, 255))
-            painter.drawRect(43+pos,yn,2,8)
-    
-    def boundingRect(self):
-        return QRectF(0,0,self.width,self.height)
-
-
+   
 class MainWindow(QWidget):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.graphicsView = QGraphicsView()
         scene = QGraphicsScene(self.graphicsView)
-        scene.setSceneRect(0, 0, 352, 492)
+        scene.setSceneRect(0, 0, 384, 482)
         self.graphicsView.setScene(scene)
         self.display = Display()
         scene.addItem(self.display)
@@ -551,6 +58,8 @@ class MainWindow(QWidget):
         self.timer.setInterval(16)
         self.timer.timeout.connect(self.update_yPhase)
         self.timer.start()
+        
+        self.fileName = os.getcwd()+'/scores/SP/'
         
         style='''
             QPushButton{
@@ -562,52 +71,6 @@ class MainWindow(QWidget):
                 background-color:transparent;
                 color:#3FAFFF;
                 border:2px solid #3FAFFF;
-            }
-            
-            QPushButton#playBack{
-                font:bold 30px;
-                border-radius: 25px;
-            }
-            QPushButton#normalSpeed{
-                background-color: #2F2F2F;
-                border:10px solid #3F3F3F;
-                border-radius: 15px;
-            }
-            QPushButton:checked#normalSpeed{
-                background-color: #7FDF3F;
-            }
-            QPushButton#hiSpeed{
-                font:bold 24px;
-                border:0px;
-                padding-bottom:4px;
-            }
-            QPushButton:pressed#hiSpeed{
-                color:#3FAFFF;
-            }
-            QPushButton#fhs{
-                font:bold 16px;
-                border-radius: 4px;
-            }
-            QSlider::groove:vertical#speedBar{
-                background-color:#2F2F2F;
-                width:6px;
-                height:240px;
-            }
-            QSlider::handle:vertical#speedBar{
-                background-color:#DFDFDF;
-                border:0px;
-                height: 6px;
-                margin: 0px -12px;
-            }
-            QSlider::groove:vertical#suddenBar{
-                background-color:#2F2F2F;
-                width:6px;
-                height:480px;
-            }
-            QSlider::groove:horizontal#seekBar{
-                background-color:#2F2F2F;
-                height:6px;
-                width:292px;
             }
             QPushButton#style{
                 font:bold 16px;
@@ -625,12 +88,12 @@ class MainWindow(QWidget):
             '''
         
         #           name,           label,      objectName,     size,       check,          connect
-        self.button('playBack',     '>',        'playBack',     50,  50,    True,  False,   'playBack',     style)
-        self.button('normalSpeed',  '',         'normalSpeed',  30,  30,    True,  True,    'normalSpeed',  style)
-        self.button('minus',        ' - ',      'hiSpeed',      24,  30,    False, False,   'hiSpeedMinus', style)
-        self.button('plus',         ' + ',      'hiSpeed',      24,  30,    False, False,   'hiSpeedPlus',  style)
-        self.button('fhs',          'FHS',      'fhs',          60,  24,    True,  False,   'switch_fhs',   style)
+        
         self.button('fileOpen',     'OPEN',     'file',         50,  20,    True,  False,   'fileOpen',     style)
+        self.button('fileNew',      'NEW',      'file',         50,  20,    True,  False,   'fileNew',      style)
+        self.button('fileEdit',     'EDIT',     'file',         50,  20,    True,  False,   'fileEdit',     style)
+        self.button('fileSave',     'SAVE',     'file',         50,  20,    True,  False,   'fileSave',     style)
+        
         self.button('player1',      '1P',       'style',        40,  24,    True,  True,    'player1',      style)
         self.button('player2',      '2P',       'style',        40,  24,    True,  False,   'player2',      style)
         self.button('off',          'OFF',      'style',        180, 24,    True,  True,    'off',          style)
@@ -639,15 +102,19 @@ class MainWindow(QWidget):
         self.button('sRandom',      'S-RANDOM', 'style',        180, 24,    True,  False,   'sRandom',      style)
         self.button('mirror',       'MIRROR',   'style',        180, 24,    True,  False,   'mirror',       style)
         
-        #           name,           vertical,   objectName,     invert, range,      value,  pressed,    released,   changed
-        self.slider('sudden',       True,       'suddenBar',    True,   0,    999,  0,      'clicked',  'clicked',  'change_sudden',    style)
-        self.slider('seek',         False,      'seekBar',      False,  -512, self.display.score.length,
-                                                                                    -512,   'pause',    'resume',   'change_yPhase',     style)
-        self.slider('speed',        True,       'speedBar',     True,  500,   1500, 1000,   'clicked',  'clicked',  'change_speed',      style)
+        self.button('pencil',       '/',        'style',        54,  24,    True,  False,    'pencil',       style)
+        self.button('cnPencil',     'CN',       'style',        54,  24,    True,  False,   'cnPencil',     style)
+        self.button('barPencil',    '---',      'style',        54,  24,    True,  False,   'barPencil',   style)
+        self.button('bpmPencil',    'BPM',      'style',        54,  24,    True,  False,   'bpmPencil',    style)
+        
+        self.button('grid16',       '-16-',     'style',        60,  24,    True,  True,   'grid16',      style)
+        self.button('grid32',       '-32-',     'style',        60,  24,    True,  False,   'grid32',      style)
+        self.button('grid64',       '-64-',     'style',        60,  24,    True,  False,   'grid64',      style)
+        self.button('grid12',       '-12-',     'style',        60,  24,    True,  False,   'grid12',      style)
+        self.button('grid24',       '-24-',     'style',        60,  24,    True,  False,   'grid24',      style)
+        self.button('grid48',       '-48-',     'style',        60,  24,    True,  False,   'grid48',      style)
         
         #           name,           label_,                                                  width,  center
-        self.label( 'speed',        '<p><font size="3" color="#CFCFCF">SPEED</font></p>',    None,   True)
-        self.label( 'hiSpeed',      '<p><font size="3" color="#CFCFCF">HI-SPEED</font></p>', None,   True)
         self.label( 'url',          '<p><font size="3" color="#CFCFCF">URL:</font></p>',     None,   False)
         self.label( 'file',         '<p><font size="3" color="#CFCFCF">FILE:</font></p>',    None,   False)
         self.label( 'genre',        self.set_genre(),                                        280,    True)
@@ -658,55 +125,18 @@ class MainWindow(QWidget):
         #               name,   size,       pressed
         self.lineEdit(  'url',  230, 20,    'analyze_web',   style)
         
-        suddenBarLayout = QVBoxLayout()
-        suddenBarLayout.setSpacing(0)
-        suddenBarLayout.addWidget(self.suddenBar)
-        suddenBarLayout.addSpacing(10)
         
-        speedLayout = QGridLayout()
-        speedLayout.addWidget(self.speedLabel,0,0,1,2)
-        speedLayout.addWidget(self.speedBar,1,0,1,1)
-        speedLayout.addWidget(self.normalSpeedButton,1,1,1,1)
-        speedLayout.setHorizontalSpacing(8)
-        speedLayout.setVerticalSpacing(16)
-        
-        hiSpeedLayout = QGridLayout()
-        hiSpeedLayout.addWidget(self.hiSpeedLabel,0,0,1,2)
-        hiSpeedLayout.addWidget(self.minusButton,1,0,1,1)
-        hiSpeedLayout.addWidget(self.plusButton,1,1,1,1)
-        hiSpeedLayout.addWidget(self.fhsButton,2,0,1,2)
-        hiSpeedLayout.setHorizontalSpacing(8)
-        hiSpeedLayout.setVerticalSpacing(8)
-        
-        playBackLayout = QVBoxLayout()
-        playBackLayout.setSpacing(24)
-        playBackLayout.addSpacing(8)
-        playBackLayout.addWidget(self.playBackButton)
-        playBackLayout.addSpacing(24)
-        playBackLayout.addLayout(speedLayout)
-        playBackLayout.addLayout(hiSpeedLayout)
-        
-        seekBarLayout = QHBoxLayout()
-        seekBarLayout.setSpacing(0)
-        seekBarLayout.addWidget(self.seekBar)
-        seekBarLayout.addSpacing(60)
-        
-        playerLayout=QGridLayout()
-        playerLayout.addLayout(suddenBarLayout,0,0)
-        playerLayout.addWidget(self.graphicsView,0,1)
-        playerLayout.addLayout(playBackLayout,0,2)
-        playerLayout.addLayout(seekBarLayout,1,1)
-        playerLayout.setColumnStretch(3,1)
-        playerLayout.setRowStretch(2,1)
-        
-        analyzeLayout = QGridLayout()
-        analyzeLayout.setHorizontalSpacing(8)
-        analyzeLayout.setVerticalSpacing(12)
-        analyzeLayout.addWidget(self.urlLabel,0,0)
-        analyzeLayout.addWidget(self.urlEdit,0,1)
-        analyzeLayout.addWidget(self.fileLabel,1,0)
-        analyzeLayout.addWidget(self.fileOpenButton,1,1)
-        analyzeLayout.setColumnStretch(2,1)
+        fileLayout = QGridLayout()
+        fileLayout.setHorizontalSpacing(8)
+        fileLayout.setVerticalSpacing(12)
+        fileLayout.addWidget(self.urlLabel,0,0)
+        fileLayout.addWidget(self.urlEdit,0,1,1,4)
+        fileLayout.addWidget(self.fileLabel,1,0)
+        fileLayout.addWidget(self.fileNewButton,1,1)
+        fileLayout.addWidget(self.fileOpenButton,1,2)
+        fileLayout.addWidget(self.fileEditButton,1,3)
+        fileLayout.addWidget(self.fileSaveButton,1,4)
+        fileLayout.setColumnStretch(5,1)
         
         songInfoLayout=QVBoxLayout()
         songInfoLayout.setSpacing(24)
@@ -722,28 +152,53 @@ class MainWindow(QWidget):
         playerButtonLayout.addWidget(self.player1Button)
         playerButtonLayout.addWidget(self.player2Button)
         playerButtonLayout.addStretch()
+        
         styleLayout = QVBoxLayout()
         styleLayout.setSpacing(6)
-        styleLayout.addLayout(playerButtonLayout)
         styleLayout.addWidget(self.offButton)
         styleLayout.addWidget(self.randomButton)
         styleLayout.addWidget(self.rRandomButton)
         styleLayout.addWidget(self.sRandomButton)
         styleLayout.addWidget(self.mirrorButton)
         
+        toolsLayout = QGridLayout()
+        toolsLayout.setHorizontalSpacing(12)
+        toolsLayout.setVerticalSpacing(8)
+        toolsLayout.addWidget(self.pencilButton,0,0)
+        toolsLayout.addWidget(self.cnPencilButton,0,1)
+        toolsLayout.addWidget(self.barPencilButton,0,2)
+        toolsLayout.addWidget(self.bpmPencilButton,0,3)
+        toolsLayout.setColumnStretch(4,1)
+        
+        gridLayout = QGridLayout()
+        gridLayout.setHorizontalSpacing(12)
+        gridLayout.setVerticalSpacing(8)
+        gridLayout.addWidget(self.grid16Button,0,0)
+        gridLayout.addWidget(self.grid32Button,0,1)
+        gridLayout.addWidget(self.grid64Button,0,2)
+        gridLayout.addWidget(self.grid12Button,1,0)
+        gridLayout.addWidget(self.grid24Button,1,1)
+        gridLayout.addWidget(self.grid48Button,1,2)
+        gridLayout.setColumnStretch(3,1)
+        
         propertyLayout = QVBoxLayout()
-        propertyLayout.setSpacing(32)
-        propertyLayout.addLayout(analyzeLayout)
+        propertyLayout.addLayout(fileLayout)
+        propertyLayout.addSpacing(16)
         propertyLayout.addLayout(songInfoLayout)
         propertyLayout.addSpacing(32)
+        propertyLayout.addLayout(playerButtonLayout)
         propertyLayout.addLayout(styleLayout)
+        propertyLayout.addLayout(toolsLayout)
+        propertyLayout.addLayout(gridLayout)
         propertyLayout.addStretch()
         
-        mainLayout = QHBoxLayout()
-        mainLayout.addLayout(playerLayout)
-        mainLayout.addLayout(propertyLayout)
-        mainLayout.addStretch()
-
+        mainLayout = QGridLayout()
+        
+        mainLayout.addWidget(self.graphicsView,0,0)
+        mainLayout.addLayout(propertyLayout,0,1)
+        mainLayout.setRowStretch(1,1)
+        
+        self.update_layout()
         self.setLayout(mainLayout)
         self.setWindowTitle("IIDX simulator")
     
@@ -756,21 +211,6 @@ class MainWindow(QWidget):
             exec("self.%sButton.setCheckable(True)"         % (name))
             exec("self.%sButton.setChecked(%r)"             % (name, checked))
         exec("self.%sButton.clicked.connect(self.%s)"       % (name, clicked))
-    
-    def slider(self, name, vertical, objectName, invert, range_min, range_max, value, pressed, released, changed, style):
-        if vertical:
-            exec("self.%sBar = QSlider(Qt.Vertical, self)"      % (name))
-        else:
-            exec("self.%sBar = QSlider(Qt.Horizontal, self)"    % (name))
-        exec("self.%sBar.setObjectName('%s')"                   % (name, objectName))
-        exec("self.%sBar.setStyleSheet(style)"                  % (name))
-        if invert:
-            exec("self.%sBar.setInvertedAppearance(True)"       % (name))
-        exec("self.%sBar.setRange(%d, %d)"                      % (name, range_min, range_max))
-        exec("self.%sBar.setValue(%d)"                          % (name, value))
-        exec("self.%sBar.sliderPressed.connect(self.%s)"        % (name, pressed))
-        exec("self.%sBar.sliderReleased.connect(self.%s)"       % (name, released))
-        exec("self.%sBar.valueChanged.connect(self.%s)"         % (name, changed))
     
     def label(self, name, label_, width, center):
         exec("self.%sLabel = QLabel('%s', self)"                % (name, label_))
@@ -787,105 +227,114 @@ class MainWindow(QWidget):
     
     def analyze_web(self):
         if self.urlEdit.text():
-            self.playBackButton.setChecked(False)
-            self.display.switch_isPlaying(False)
+            self.display.switch_isPlaying(0)
             
             url=re.findall(r'([^/\.\?]+)',self.urlEdit.text())
             if not os.path.exists(os.getcwd()+'/scores/SP/'+folderDict[url[-4]]):
                 os.makedirs(os.getcwd()+'/scores/SP/'+folderDict[url[-4]])
             
-            fileName=folderDict[url[-4]]+'/'+url[-3]+'_'+re.findall(r'([A-Z1-9])',url[-1])[1]+'.txt'
-            if os.path.exists('scores/SP/'+fileName):
-                self.analyze_text(os.getcwd()+'/scores/SP/'+fileName)
+            self.fileName=os.getcwd()+'/scores/SP/'+folderDict[url[-4]]+'/'+url[-3]+'_'+re.findall(r'([A-Z1-9])',url[-1])[1]+'.txt'
+            if os.path.exists(self.fileName):
+                self.analyze_text(self.fileName)
             else:
-                self.display.score.analyze_web(self.urlEdit.text())
-                self.display.score.save_text(os.getcwd()+'/scores/SP/'+fileName)
+                self.display.score.analyze_web(self.urlEdit.text()+"=24")
+                self.display.score.save_text(self.fileName)
                 self.reset()
             self.urlEdit.setText('')
             
+    def fileNew(self, isChecked):
+        self.off()
+        self.display.switch_isEditing(True)
+        self.fileNewButton.setChecked(True)
+        self.fileEditButton.setChecked(True)
+        self.update_layout()
+    
     def fileOpen(self):
-        fileName = QFileDialog.getOpenFileName(self, 'Open file', 'scores/SP', filter="Image Files (*.txt)")
-        if fileName[0]:
-            self.analyze_text(fileName[0])
+        fileName_ = QFileDialog.getOpenFileName(self, 'Open file', 'scores/SP', filter="Image Files (*.txt)")[0]
+        if fileName_:
+            self.fileName = fileName_
+            self.analyze_text(self.fileName)
+            self.display.switch_isEditing(False)
+            self.fileNewButton.setChecked(False)
+            self.fileEditButton.setChecked(False)
+            self.fileSaveButton.setChecked(False)
+            self.update_layout()
         self.fileOpenButton.setChecked(False)
+        
+    def fileEdit(self, isChecked):
+        if isChecked:
+            self.off()
+            self.display.switch_isEditing(True)
+            self.update_layout()
+        else:
+            self.display.switch_isEditing(False)
+            self.update_layout()
+    
+    def fileSave(self):
+        fileName_ = QFileDialog.getSaveFileName(self, 'Save file', self.fileName, filter="Image Files (*.txt)")[0]
+        if fileName_:
+            self.fileName = fileName_
+            self.display.score.save_text(self.fileName)
+        self.fileSaveButton.setChecked(False)
+    
+    def update_layout(self):
+        if self.display.isEditing:
+            self.offButton.hide()
+            self.randomButton.hide()
+            self.rRandomButton.hide()
+            self.sRandomButton.hide()
+            self.mirrorButton.hide()
+            self.pencilButton.show()
+            self.cnPencilButton.show()
+            self.barPencilButton.show()
+            self.bpmPencilButton.show()
+            self.grid16Button.show()
+            self.grid32Button.show()
+            self.grid64Button.show()
+            self.grid12Button.show()
+            self.grid24Button.show()
+            self.grid48Button.show()
+        else:
+            self.pencilButton.hide()
+            self.cnPencilButton.hide()
+            self.barPencilButton.hide()
+            self.bpmPencilButton.hide()
+            self.grid16Button.hide()
+            self.grid32Button.hide()
+            self.grid64Button.hide()
+            self.grid12Button.hide()
+            self.grid24Button.hide()
+            self.grid48Button.hide()
+            self.offButton.show()
+            self.randomButton.show()
+            self.rRandomButton.show()
+            self.sRandomButton.show()
+            self.mirrorButton.show()
+        self.update()
             
     def analyze_text(self,filePath):
-        self.playBackButton.setChecked(False)
-        self.display.switch_isPlaying(False)
+        self.display.switch_isPlaying(0)
         self.display.score.analyze_text(filePath)
         self.reset()
-        
-    def playBack(self,isChecked):
-        self.display.switch_isPlaying(isChecked)
-        
-    def pause(self):
-        self.display.switch_isPlaying(False)
-    
-    def resume(self):
-        if self.playBackButton.isChecked():
-            self.display.switch_isPlaying(True)
-    
-    def clicked(self):
-        self.update_yPhase()
-        
-    def change_sudden(self, sudden):
-        self.display.change_sudden(sudden)
-            
-    def change_yPhase(self,yPhase):
-        self.display.update_yPhase(float(yPhase))
     
     def reset(self):
         self.off()
-        self.seekBar.setRange(-768,self.display.score.length)
-        self.seekBar.setValue(-768)
-        self.change_yPhase(-768)
-        self.change_sudden(self.display.sudden)
+        self.display.update_yPhase(-768)
+        self.display.change_sudden(None)
         self.genreLabel.setText(self.set_genre())
         self.titleLabel.setText(self.set_title())
         self.artistLabel.setText(self.set_artist())
         self.levelLabel.setText(self.set_level())
-    
-    def change_speed(self,speed):
-        self.display.change_speed(float(speed)/1000)
-        self.normalSpeedButton.setChecked(False)
         
-        self.update_yPhase()
-        
-    def normalSpeed(self):
-        self.display.change_speed(1.0)
-        self.speedBar.setValue(1000)
-        self.normalSpeedButton.setChecked(True)
-        
-        self.update_yPhase()
-        
-    def hiSpeedMinus(self):
-        self.display.change_hiSpeed(True)
-        
-        self.update_yPhase()
-        
-    def hiSpeedPlus(self):
-        self.display.change_hiSpeed(False)
-        
-        self.update_yPhase()
-    
-    def switch_fhs(self,isChecked):
-        self.display.switch_fhs(isChecked)
-        
-        self.update_yPhase()
-    
     def player1(self):
         self.display.switch_player(False)
         self.player1Button.setChecked(True)
         self.player2Button.setChecked(False)
-        
-        self.update_yPhase()
     
     def player2(self):
         self.display.switch_player(True)
         self.player1Button.setChecked(False)
         self.player2Button.setChecked(True)
-        
-        self.update_yPhase()
     
     def off(self):
         self.display.change_style(0)
@@ -895,8 +344,6 @@ class MainWindow(QWidget):
         self.sRandomButton.setChecked(False)
         self.mirrorButton.setChecked(False)
         
-        self.update_yPhase()
-        
     def random(self):
         self.display.change_style(1)
         self.offButton.setChecked(False)
@@ -905,8 +352,6 @@ class MainWindow(QWidget):
         self.sRandomButton.setChecked(False)
         self.mirrorButton.setChecked(False)
         
-        self.update_yPhase()
-        
     def rRandom(self):
         self.display.change_style(2)
         self.offButton.setChecked(False)
@@ -914,8 +359,6 @@ class MainWindow(QWidget):
         self.rRandomButton.setChecked(True)
         self.sRandomButton.setChecked(False)
         self.mirrorButton.setChecked(False)
-        
-        self.update_yPhase()
             
     def sRandom(self):
         self.display.change_style(3)
@@ -925,8 +368,6 @@ class MainWindow(QWidget):
         self.sRandomButton.setChecked(True)
         self.mirrorButton.setChecked(False)
         
-        self.update_yPhase()
-        
     def mirror(self):
         self.display.change_style(4)
         self.offButton.setChecked(False)
@@ -935,16 +376,121 @@ class MainWindow(QWidget):
         self.sRandomButton.setChecked(False)
         self.mirrorButton.setChecked(True)
         
-        self.update_yPhase()
+    def pencil(self, isChecked):
+        if isChecked:
+            self.display.change_tool(1)
+        else:
+            self.display.change_tool(0)
+            self.cnPencilButton.setChecked(False)
+            self.barPencilButton.setChecked(False)
+            self.bpmPencilButton.setChecked(False)
+            
+    def cnPencil(self, isChecked):
+        if isChecked:
+            self.display.change_tool(2)
+            self.pencilButton.setChecked(True)
+            self.barPencilButton.setChecked(False)
+            self.bpmPencilButton.setChecked(False)
+        else:
+            self.display.change_tool(1)
+            
+    def barPencil(self, isChecked):
+        if isChecked:
+            self.display.change_tool(3)
+            self.pencilButton.setChecked(True)
+            self.cnPencilButton.setChecked(False)
+            self.bpmPencilButton.setChecked(False)
+        else:
+            self.display.change_tool(1)
+            
+    def bpmPencil(self, isChecked):
+        if isChecked:
+            self.display.change_tool(4)
+            self.pencilButton.setChecked(True)
+            self.cnPencilButton.setChecked(False)
+            self.barPencilButton.setChecked(False)
+        else:
+            self.display.change_tool(1)
+            
+    def grid16(self):
+        self.display.change_grid(1)
+        self.grid16Button.setChecked(True)
+        self.grid32Button.setChecked(False)
+        self.grid64Button.setChecked(False)
+        self.grid12Button.setChecked(False)
+        self.grid24Button.setChecked(False)
+        self.grid48Button.setChecked(False)
+            
+    def grid32(self):
+        self.display.change_grid(2)
+        self.grid16Button.setChecked(False)
+        self.grid32Button.setChecked(True)
+        self.grid64Button.setChecked(False)
+        self.grid12Button.setChecked(False)
+        self.grid24Button.setChecked(False)
+        self.grid48Button.setChecked(False)
+            
+    def grid64(self):
+        self.display.change_grid(3)
+        self.grid16Button.setChecked(False)
+        self.grid32Button.setChecked(False)
+        self.grid64Button.setChecked(True)
+        self.grid12Button.setChecked(False)
+        self.grid24Button.setChecked(False)
+        self.grid48Button.setChecked(False)
+            
+    def grid12(self):
+        self.display.change_grid(4)
+        self.grid16Button.setChecked(False)
+        self.grid32Button.setChecked(False)
+        self.grid64Button.setChecked(False)
+        self.grid12Button.setChecked(True)
+        self.grid24Button.setChecked(False)
+        self.grid48Button.setChecked(False)
+            
+    def grid24(self):
+        self.display.change_grid(5)
+        self.grid16Button.setChecked(False)
+        self.grid32Button.setChecked(False)
+        self.grid64Button.setChecked(False)
+        self.grid12Button.setChecked(False)
+        self.grid24Button.setChecked(True)
+        self.grid48Button.setChecked(False)
+            
+    def grid48(self):
+        self.display.change_grid(6)
+        self.grid16Button.setChecked(False)
+        self.grid32Button.setChecked(False)
+        self.grid64Button.setChecked(False)
+        self.grid12Button.setChecked(False)
+        self.grid24Button.setChecked(False)
+        self.grid48Button.setChecked(True)
             
     def update_yPhase(self):
         self.display.update_yPhase(None)
         if self.display.isEnd:
-            self.playBackButton.setChecked(False)
-            self.display.switch_isPlaying(False)
-            self.seekBar.setValue(-768)
-            self.change_yPhase(-768)
+            self.display.switch_isPlaying(0)
+            self.display.update_yPhase(-768)
             self.display.switch_isEnd(False)
+            
+    def keyPressEvent(self, event):
+        if self.display.isShift:
+            if event.key() in {Qt.Key_Z, Qt.Key_X, Qt.Key_C, Qt.Key_V}:
+                self.display.change_hiSpeed(False)
+            elif event.key() in {Qt.Key_S, Qt.Key_D, Qt.Key_F}:
+                self.display.change_hiSpeed(True)
+            elif event.key() == Qt.Key_Q:
+                self.display.switch_fhs(2)
+        
+        elif event.key() == Qt.Key_Shift:
+            self.display.isShift = True
+            
+        elif event.key() == Qt.Key_Space:
+            self.display.switch_isPlaying(2)
+            
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Shift:
+            self.display.isShift = False
             
     def set_genre(self):
         return '<p><font size="3" color="#CFCFCF">'+self.display.score.genre+'</font></p>'

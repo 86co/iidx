@@ -56,7 +56,7 @@ def main():
     for ver_url in ver_url_list:
         options = webdriver.chrome.options.Options()
         options.add_argument('--headless')
-        driver = webdriver.Chrome(executable_path=os.getcwd()+'/chromedriver',chrome_options=options)
+        driver = webdriver.Chrome(executable_path=os.getcwd()+'/chromedriver',options=options)
         driver.get(ver_url)
         html = driver.page_source
         driver.quit()

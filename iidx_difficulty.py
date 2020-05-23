@@ -51,12 +51,19 @@ folderName={
     '23': '23_copula',
     '24': '24_SINOBUZ',
     '25': '25_CANNON_BALLERS',
-    '26': '26_Rootage'
+    '26': '26_Rootage',
+    '27': '27_HEROIC_VERSE'
 }
 
 def main():
-    score, styleOption, guageOption, times = handle_input()
-    summary = analyze(score, styleOption, guageOption, times)
+    score, guageOption = handle_input()
+    totalnotes = 0
+    for lane in score.notes_default:
+        totalnotes += len(lane)
+    snotes = len(score.notes_default[0])
+    print(totalnotes, snotes)
+    return None
+    summary = analyze(score, guageOption)
     summarize(summary)
         
 def handle_input():
@@ -69,6 +76,7 @@ def handle_input():
             series=folderName[series]
             filePath = os.getcwd()+'/scores/SP/'+series
             fileList = [fileName for fileName in os.listdir(filePath) if re.match(r'[\w]+.txt',fileName)]
+            fileList.sort()
         except: continue
         for i, fileName in enumerate(fileList):
             print('{:>3}'.format(str(i+1))+". "+re.findall(r'[\w]+',fileName)[0])
@@ -86,87 +94,80 @@ def handle_input():
         filePath = os.getcwd()+'/scores/SP/'+series+'/'+fileName
         score=Score()
         score.analyze_text(filePath)
-    
-    print('')
-    styleOption=None
-    while styleOption not in {'N','A','R','S'}:
-        styleOption=input("style option([N]ormal-mirror, r[A]ndom, [R]-random, [S]-random): ")
-        styleOption=styleOption.upper()
         
     guageOption=None
     while guageOption not in {'N','E','H','X'}:
         guageOption=input("guage option([N]ormal, [E]asy, [H]ard, e[X]-hard): ")
         guageOption=guageOption.upper()
         
-    if styleOption in {'A','R','S'}:
-        times=None
-        while times is None or times<1:
-            times=input("number of times(1~): ")
-            try: times=int(times)
-            except ValueError: times=None
-                
-    else: times=2
-        
-    return score, styleOption, guageOption, times
+    return score, guageOption
 
-def analyze(score, styleOption, guageOption, times):
-    canceled = False
-    jobs = multiprocessing.JoinableQueue()
-    results = multiprocessing.Queue()
-    concurrency=multiprocessing.cpu_count()
-    create_processes(score, guageOption, jobs, results, concurrency)
-    add_jobs(styleOption, times, jobs)
-    try:
-        jobs.join()
-    except KeyboardInterrupt:
-        canceled = True
-    print("""
-    GENRE  {}
-    TITLE  {}
-    ARTIST {}
-    LEVEL  {} ({} notes)
-    """.format(score.genre, score.title, score.artist, score.level, score.number_of_notes))
-    while not results.empty():
-        result=results.get_nowait()
-        report(result)
-    pyplot.title("{} ({})".format(score.title, score.level))
-    pyplot.tick_params(labelbottom=False)
-    pyplot.legend()
-    pyplot.show()
-    #return Summary()
-        
-def create_processes(score, guageOption, jobs, results, concurrency):
-    for _ in range(concurrency):
-        process = multiprocessing.Process(target=worker, args=(score, guageOption, jobs, results))
-        process.daemon = True
-        process.start()    
+def analyze(score, guageOption):
+    notes_default=[None for _ in range(8)]
+    for i, lane in enumerate(score.notes_default):
+        notes_default[i] = lane[:]
     
-def worker(score, guageOption, jobs, results):
-    while True:
-        try:
-            styleNumber = jobs.get()
-            result = analyze_one(score, styleNumber, guageOption)
-            results.put(result)
-        finally:
-            jobs.task_done()
-
-def add_jobs(styleOption, times, jobs):
-    for i in range(times):
-        if   styleOption=='N': jobs.put(0 if i==0 else 4)
-        elif styleOption=='A': jobs.put(1)
-        elif styleOption=='R': jobs.put(2)
-        elif styleOption=='S': jobs.put(3)
-
-def analyze_one(score, styleNumber, guageOption):
-    notes, longNotes, arrangement = score.change_style(styleNumber)
-    notesList_with_frame=[]
-    for frame in score.frameList:
-        notesList_with_frame.append([frame])
-    for yIndex, y in enumerate(score.yList):
-        for laneIndex, lane in enumerate(notes):
+    noted = [[] for _ in range(8)]
+    noted_any = []
+    noted_all = []
+    charging = 0
+    
+    notes = []
+    charge = []
+    scratch = []
+    soflan = []
+    tateren = []
+    
+    yPhase=0
+    bpm=self.bpm[0][1]
+    while any(notes_default):
+        is_noted_any = False
+        for lane_no, lane in enumerate(notes_default):
+            count = 0
             for note in lane:
-                if note[0]==y:
-                    notesList_with_frame[yIndex].append([laneIndex, note[1]])
+                if note[0]<=yPhase: count+=1
+                else: break
+            for _ in range(count):
+                note = lane.pop(0)
+                if note[1] == 0:
+                    noted[lane_no].append(60)
+                elif note[1] == 1:
+                    noted[lane_no].append(60)
+                    charging += 1
+                elif note[1] == 2:
+                    if lane_no == 0:
+                        noted[lane_no].append(60)
+                    charging -= 1
+                noted_all.append(60)
+                is_noted_any = True
+        if is_noted_any: noted_any.append(60)
+        
+        
+        
+        
+        
+        
+        
+        
+        noted = [list(map(lambda note: note-1), noted_i) for noted_i in noted]
+        noted = [list(filter(lambda note: note>0), noted_i) for noted_i in noted]
+        noted_all = list(map(lambda note: note-1), noted_all)
+        noted_all = list(filter(lambda note: note>0), noted_all)
+        noted_any = list(map(lambda note: note-1), noted_any)
+        noted_any = list(filter(lambda note: note>0), noted_any)
+                
+        yPhase+=2.0/75*bpm
+        
+        try:
+            bpm=self.bpm[0][1]
+        except:
+            pass
+        for bpm_ in self.bpm:
+            if bpm_[0]<=yPhase:
+                bpm=bpm_[1]
+            else:
+                break
+    
     guageProcess=[]
     difficulty=1
     while difficulty<30:

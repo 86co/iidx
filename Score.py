@@ -19,7 +19,7 @@ class Score():
         self.isHCN=False
         
         self.notes_default = [[] for _ in range(8)]
-        self.longNotes_default = [[] for _ in range(8)]
+        self.cNotes_default = [[] for _ in range(8)]
         self.barLine = []
         self.bpm = []
         
@@ -30,7 +30,7 @@ class Score():
         
         options = webdriver.chrome.options.Options()
         options.add_argument('--headless')
-        driver = webdriver.Chrome(executable_path=os.getcwd()+'/chromedriver',chrome_options=options)
+        driver = webdriver.Chrome(executable_path=os.getcwd()+'/chromedriver',options=options)
         driver.get(url)
         html = driver.page_source
         driver.quit()
@@ -61,7 +61,7 @@ class Score():
         
         self.sort_bpmList(bpm_tmp)
         self.sort_notes()
-        self.combine_longNotes()
+        self.combine_cNotes()
         self.calculate_length()
     
     def set_songInfo_web(self, songInfo):
@@ -80,10 +80,10 @@ class Score():
 
         if src in {'../s.gif','../r.gif','../w.gif','../b.gif',
                    '../ls.gif','../hs.gif','../lw.gif','../hw.gif','../lb.gif','../hb.gif'}:
-            lane, isLongNote = self.toLane(note.get('src'),style[1])
-            if isLongNote==True:
-                self.longNotes_default[lane].append([yPhase+(barLength-1-int(style[0])-int(style[2])),int(style[2])])
-            elif isLongNote==False:
+            lane, isCNote = self.toLane(note.get('src'),style[1])
+            if isCNote==True:
+                self.cNotes_default[lane].append([yPhase+(barLength-1-int(style[0])-int(style[2])),int(style[2])])
+            elif isCNote==False:
                 self.notes_default[lane].append([yPhase+(barLength-5-int(style[0])),0])
 
         elif src=='../t.gif':
@@ -96,8 +96,8 @@ class Score():
         if   src in {'../s.gif','../r.gif'}:   return 0, False
         elif src in ('../ls.gif','../hs.gif'): return 0, True
         
-        if   src in {'../w.gif','../b.gif'}:                           isLongNote = False
-        elif src in {'../lw.gif','../hw.gif','../lb.gif','../hb.gif'}: isLongNote = True
+        if   src in {'../w.gif','../b.gif'}:                           isCNote = False
+        elif src in {'../lw.gif','../hw.gif','../lb.gif','../hb.gif'}: isCNote = True
         
         if   left in {"37","38"}:   lane=1
         elif left in {"51","52"}:   lane=2
@@ -109,7 +109,7 @@ class Score():
             
         else: return None, None
         
-        return lane, isLongNote
+        return lane, isCNote
     
     def analyze_text(self,filePath):
         self.initialyze()
@@ -165,7 +165,7 @@ class Score():
                 hold = self.set_note_text(command, line, yPhase, barLength, hold)
 
         self.sort_bpmList(bpm_tmp)
-        self.make_longNotesList()
+        self.make_cNotesList()
         self.calculate_length()
     
     def handle_line(self, line):
@@ -316,7 +316,7 @@ class Score():
         self.isHCN=False
         
         self.notes_default = [[] for _ in range(8)]
-        self.longNotes_default = [[] for _ in range(8)]
+        self.cNotes_default = [[] for _ in range(8)]
         self.barLine = []
         self.bpm = []
         
@@ -339,11 +339,11 @@ class Score():
     def sort_notes(self):
         for lane in self.notes_default:
             lane.sort()
-        for lane in self.longNotes_default:
+        for lane in self.cNotes_default:
             lane.sort()
             
-    def combine_longNotes(self):
-        for laneIndex, lane in enumerate(self.longNotes_default):
+    def combine_cNotes(self):
+        for laneIndex, lane in enumerate(self.cNotes_default):
             lane.sort()
             for index, note in enumerate(lane):
                 i=0
@@ -358,30 +358,46 @@ class Score():
                     i+=1
                 self.notes_default[laneIndex][i][1]=2
 
-    def make_longNotesList(self):
+    def make_cNotesList(self):
         for laneIndex, lane in enumerate(self.notes_default):
             lane.sort()
             for index, note in enumerate(lane):
                 if note[1]==1:
-                    self.longNotes_default[laneIndex].append([note[0],lane[index+1][0]-note[0]])
+                    self.cNotes_default[laneIndex].append([note[0],lane[index+1][0]-note[0]])
+                    
+    def add_notes(self, lane, notes, cNotes):
+        for note in notes:
+            self.notes_default[lane].append(note)
+        for note in cNotes:
+            self.cNotes_default[lane].append(note)
+        self.sort_notes()
+        
+    def del_notes(self, lane, notes, cNotes):
+        for note in notes:
+            try:
+                self.notes_default[lane].remove(note)
+            except:
+                pass
+        for note in cNotes:
+            try:
+                self.cNotes_default[lane].remove(note)
+            except:
+                pass
                 
     def change_style(self,style):
         notes=[[] for _ in range(8)]
-        longNotes=[[] for _ in range(8)]
-        arrangement=None
+        cNotes=[[] for _ in range(8)]
         notes[0]=self.notes_default[0]
-        longNotes[0]=self.longNotes_default[0]
+        cNotes[0]=self.cNotes_default[0]
         if style==0:
             notes[1:8]=self.notes_default[1:8]
-            longNotes[1:8]=self.longNotes_default[1:8]
-            arrangement='Normal'
+            cNotes[1:8]=self.cNotes_default[1:8]
         elif style==1:
             index=[1,2,3,4,5,6,7]
             random.shuffle(index)
             for d, r in enumerate(index):
                 notes[d+1]=self.notes_default[r]
-                longNotes[d+1]=self.longNotes_default[r]
-            arrangement=index
+                cNotes[d+1]=self.cNotes_default[r]
         elif style==2:
             index=[1,2,3,4,5,6,7]
             if random.randint(0,1)==1:
@@ -389,20 +405,18 @@ class Score():
             for _ in range(random.randint(0,6)): index.append(index.pop(0))
             for d, r in enumerate(index):
                 notes[d+1]=self.notes_default[r]
-                longNotes[d+1]=self.longNotes_default[r]
-            arrangement=index
+                cNotes[d+1]=self.cNotes_default[r]
         elif style==3:
             DF_MIN = 4
             
             notes_sRandom=[[] for _ in range(7)]
-            longNotes_sRandom=[[] for _ in range(7)]
+            cNotes_sRandom=[[] for _ in range(7)]
             notes_default=[None for _ in range(7)]
             for i, lane in enumerate(self.notes_default[1:]):
                 notes_default[i] = lane[:]
             
             noted=[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
             
-            frame=0
             yPhase=0
             try:
                 bpm=self.bpm[0][1]
@@ -425,7 +439,7 @@ class Score():
                                 noted[r][1]=DF_MIN
                             elif note[1]==1:
                                 notes_sRandom[r].append(lane[0])
-                                longNotes_sRandom[r].append([note[0],lane[0][0]-note[0]])
+                                cNotes_sRandom[r].append([note[0],lane[0][0]-note[0]])
                                 noted[r]=[1,i_lane]
                         elif note[1] == 2:
                             for i in range(7):
@@ -435,7 +449,6 @@ class Score():
                     if noted[i][0]==0 and noted[i][1]>0:
                         noted[i][1]-=1
                     
-                frame+=1
                 yPhase+=2.0/75*bpm
                 
                 try:
@@ -449,10 +462,8 @@ class Score():
                         break
                 
             notes[1:8]=notes_sRandom[0:7]
-            longNotes[1:8]=longNotes_sRandom[0:7]
-            arrangement='S-Random'
+            cNotes[1:8]=cNotes_sRandom[0:7]
         elif style==4:
             notes[1:8]=self.notes_default[1:8][::-1]
-            longNotes[1:8]=self.longNotes_default[1:8][::-1]
-            arrangement='Mirror'
-        return notes, longNotes, arrangement
+            cNotes[1:8]=self.cNotes_default[1:8][::-1]
+        return notes, cNotes
