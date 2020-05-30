@@ -227,7 +227,7 @@ class MainWindow(QWidget):
     
     def analyze_web(self):
         if self.urlEdit.text():
-            self.display.switch_isPlaying(0)
+            self.display.switch_isPlaying(False)
             
             url=re.findall(r'([^/\.\?]+)',self.urlEdit.text())
             if not os.path.exists(os.getcwd()+'/scores/SP/'+folderDict[url[-4]]):
@@ -313,7 +313,7 @@ class MainWindow(QWidget):
         self.update()
             
     def analyze_text(self,filePath):
-        self.display.switch_isPlaying(0)
+        self.display.switch_isPlaying(False)
         self.display.score.analyze_text(filePath)
         self.reset()
     
@@ -468,10 +468,6 @@ class MainWindow(QWidget):
             
     def update_yPhase(self):
         self.display.update_yPhase(None)
-        if self.display.isEnd:
-            self.display.switch_isPlaying(0)
-            self.display.update_yPhase(-768)
-            self.display.switch_isEnd(False)
             
     def keyPressEvent(self, event):
         if self.display.isShift:
@@ -480,13 +476,13 @@ class MainWindow(QWidget):
             elif event.key() in {Qt.Key_S, Qt.Key_D, Qt.Key_F}:
                 self.display.change_hiSpeed(True)
             elif event.key() == Qt.Key_Q:
-                self.display.switch_fhs(2)
+                self.display.switch_fhs()
         
         elif event.key() == Qt.Key_Shift:
             self.display.isShift = True
             
         elif event.key() == Qt.Key_Space:
-            self.display.switch_isPlaying(2)
+            self.display.switch_isPlaying(True)
             
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Shift:
